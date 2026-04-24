@@ -49,6 +49,8 @@ let demoMessageTimerId = null;
 let currentPollIntervalMs = DEFAULT_POLL_INTERVAL_MS;
 const carElementsById = new Map();
 const previousCarPositions = new Map();
+let lastActionKey = "";
+let collisionFlashTimerId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     bindActions();
@@ -134,6 +136,7 @@ function renderStatus(status) {
     evidenceClassElement.textContent = actionTraceParts.handledBy || status.activeStateClass || status.currentState;
     evidenceActionElement.textContent = actionTraceParts.action || "Sin accion registrada";
     evidenceResultElement.textContent = actionTraceParts.result || "Sin resultado registrado";
+    lastActionKey = actionTraceParts.actionKey || "";
 
     renderCars(status.cars, status.currentState);
     renderTrafficLights(status.trafficLights || []);
@@ -196,9 +199,10 @@ function startPolling(intervalMs) {
 function renderCars(cars, currentState) {
     const sceneWidth = carsLayerElement.clientWidth || roadSceneElement.clientWidth || 900;
     const usableWidth = Math.max(sceneWidth - 120, 240);
-    const currentCarIds = new Set(cars.map((car) => car.id));
+    const visibleCars = cars.filter((car) => car.visible !== false);
+    const currentCarIds = new Set(visibleCars.map((car) => car.id));
 
-    cars.forEach((car, index) => {
+    visibleCars.forEach((car, index) => {
         const normalizedPosition = (car.xPosition % ROAD_LENGTH) / ROAD_LENGTH;
         const leftPosition = Math.min((normalizedPosition * usableWidth) + CAR_START_OFFSET, sceneWidth - 30);
         const laneTop = resolveLaneTop(car.lane);
@@ -234,6 +238,18 @@ function renderCars(cars, currentState) {
 
         previousCarPositions.set(car.id, leftPosition);
     });
+
+    if (lastActionKey === "provokeAccident" && visibleCars.some((car) => car.crashed)) {
+        roadSceneElement.classList.add("collision-impact");
+
+        if (collisionFlashTimerId) {
+            window.clearTimeout(collisionFlashTimerId);
+        }
+
+        collisionFlashTimerId = window.setTimeout(() => {
+            roadSceneElement.classList.remove("collision-impact");
+        }, 1100);
+    }
 
     Array.from(carElementsById.keys()).forEach((carId) => {
         if (!currentCarIds.has(carId)) {
@@ -314,7 +330,9 @@ function renderLogs(logs) {
 function buildCarClassName(car, currentState, index) {
     const classNames = ["car-visual", `car-color-${(index % 4) + 1}`];
 
-    if (car.blocked) {
+    if (car.crashed) {
+        classNames.push("car-crashed");
+    } else if (car.blocked) {
         classNames.push("car-blocked");
     } else if (currentState === "FluentTrafficState") {
         classNames.push("car-fast");
@@ -322,6 +340,10 @@ function buildCarClassName(car, currentState, index) {
         classNames.push("car-recovery");
     } else {
         classNames.push("car-slow");
+    }
+
+    if (car.changingLane) {
+        classNames.push("car-changing-lane");
     }
 
     return classNames.join(" ");
@@ -384,6 +406,7 @@ function parseActionTrace(trace) {
     if (!trace) {
         return {
             action: "",
+            actionKey: "",
             handledBy: "",
             result: ""
         };
@@ -395,6 +418,7 @@ function parseActionTrace(trace) {
     if (traceParts.length < 2) {
         return {
             action: trace,
+            actionKey: "",
             handledBy: "",
             result: ""
         };
@@ -405,6 +429,7 @@ function parseActionTrace(trace) {
 
     return {
         action: translateActionName(action),
+        actionKey: action,
         handledBy: stateAndResult[0] || "",
         result: translateResult(stateAndResult[1] || "")
     };
@@ -429,6 +454,7 @@ function translateActionName(action) {
         increaseTraffic: "Aumentar trafico",
         reduceTraffic: "Reducir trafico",
         reportAccident: "Reportar accidente",
+        provokeAccident: "Provocar accidente",
         clearAccident: "Despejar accidente",
         advanceSimulation: "Avanzar simulacion",
         reset: "Reiniciar simulador"
@@ -576,7 +602,8 @@ function translateDecisionLog(decisionLog) {
         .replace(" blocked while emergency flow control remained active.", " bloqueado mientras el control de emergencia seguia activo.")
         .replace("confirmed that lane ", "confirmo que el carril ")
         .replace(" remains blocked.", " sigue bloqueado.")
-        .replace("kept recovery controls active.", "mantuvo activos los controles de recuperacion.");
+        .replace("kept recovery controls active.", "mantuvo activos los controles de recuperacion.")
+        .replace("confirmed that an accident is already active.", "confirmo que ya existe un accidente activo.");
 }
 
 function translateLog(log) {

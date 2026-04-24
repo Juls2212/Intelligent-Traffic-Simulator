@@ -36,13 +36,18 @@ public class AccidentTrafficState implements TrafficState {
     }
 
     @Override
+    public void provokeAccident(TrafficSimulator simulator) {
+        simulator.recordStateHandling("provokeAccident", "AccidentTrafficState", "Remains in AccidentTrafficState");
+        simulator.addDecisionLog("AccidentTrafficState confirmed that an accident is already active.");
+    }
+
+    @Override
     public void clearAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("clearAccident", "AccidentTrafficState", "Transition to ClearedTrafficState");
         simulator.setState(new ClearedTrafficState());
-        simulator.enableAllLanes();
+        simulator.clearAccidentScene();
         simulator.clearLanePriorities();
         simulator.restoreRecoveryTrafficLights();
-        simulator.addDecisionLog("ClearedTrafficState restored normal circulation.");
         simulator.updateCars(simulator.getRecoverySpeed(), false);
     }
 

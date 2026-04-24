@@ -13,6 +13,8 @@ public interface TrafficState {
 
     void reportAccident(TrafficSimulator simulator);
 
+    void provokeAccident(TrafficSimulator simulator);
+
     void clearAccident(TrafficSimulator simulator);
 
     void advanceSimulation(TrafficSimulator simulator);

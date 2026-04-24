@@ -9,6 +9,7 @@ import state.TrafficState;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -25,11 +26,13 @@ public class TrafficSimulator {
     private static final int MAX_LOG_ENTRIES = 24;
     private static final int MAX_DECISION_LOGS = 12;
     private static final long DEMO_STEP_DELAY_MS = 1200;
+    private static final int DEFAULT_CAR_COUNT = 6;
     private static final double ROAD_LENGTH = 760.0;
     private static final double MOVEMENT_SCALE = 1.8;
     private static final double ACCIDENT_POSITION = 540.0;
     private static final double ACCIDENT_APPROACH_DISTANCE = 120.0;
     private static final int ACCIDENT_AFTER_ZONE_SPEED = 14;
+    private static final int ACCIDENT_QUEUE_POSITION = 470;
 
     private TrafficState currentState;
     private final List<Car> cars;
@@ -43,6 +46,7 @@ public class TrafficSimulator {
     private boolean demoRunning;
     private long lastMovementTimestamp;
     private int blockedLane;
+    private int carSequence;
 
     public TrafficSimulator() {
         this.cars = new ArrayList<>();
@@ -55,6 +59,7 @@ public class TrafficSimulator {
         this.demoRunning = false;
         this.lastMovementTimestamp = System.currentTimeMillis();
         this.blockedLane = -1;
+        this.carSequence = 7;
         this.roadStatus = new RoadStatus("", "", "", "", lastActionTrace, 0, "", false);
         initializeSimulator(true);
     }
@@ -72,6 +77,11 @@ public class TrafficSimulator {
     public synchronized void reportAccident() {
         synchronizeTrafficFlow();
         currentState.reportAccident(this);
+    }
+
+    public synchronized void provokeAccident() {
+        synchronizeTrafficFlow();
+        currentState.provokeAccident(this);
     }
 
     public synchronized void clearAccident() {
@@ -94,6 +104,7 @@ public class TrafficSimulator {
         blockedLane = -1;
         lastActionTrace = "Action: reset handled by TrafficSimulator \u2192 Transition to FluentTrafficState";
         lastMovementTimestamp = System.currentTimeMillis();
+        carSequence = 7;
         initializeSimulator(false);
         addLog("TrafficSimulator reset the simulation and restored FluentTrafficState as the initial academic baseline.");
     }
@@ -111,7 +122,7 @@ public class TrafficSimulator {
             try {
                 increaseTraffic();
                 pauseDemoStep();
-                reportAccident();
+                provokeAccident();
                 pauseDemoStep();
                 clearAccident();
                 pauseDemoStep();
@@ -142,8 +153,16 @@ public class TrafficSimulator {
         synchronizeTrafficFlow();
 
         for (Car car : cars) {
-            car.setBlocked(false);
-            car.setSpeed(speed);
+            if (!car.isVisible()) {
+                continue;
+            }
+
+            if (!car.isCrashed()) {
+                car.setBlocked(false);
+                car.setSpeed(speed);
+            }
+
+            car.setChangingLane(false);
         }
 
         if (accidentActive) {
@@ -162,7 +181,22 @@ public class TrafficSimulator {
 
     public synchronized List<Car> getCars() {
         synchronizeTrafficFlow();
-        return Collections.unmodifiableList(new ArrayList<>(cars));
+        List<Car> copies = new ArrayList<>();
+
+        for (Car car : cars) {
+            copies.add(new Car(
+                    car.getId(),
+                    car.getLane(),
+                    car.getXPosition(),
+                    car.getSpeed(),
+                    car.isBlocked(),
+                    car.isCrashed(),
+                    car.isVisible(),
+                    car.isChangingLane()
+            ));
+        }
+
+        return Collections.unmodifiableList(copies);
     }
 
     public synchronized RoadStatus getRoadStatus() {
@@ -358,6 +392,10 @@ public class TrafficSimulator {
             int accumulatedSpeed = 0;
 
             for (Car car : cars) {
+                if (!car.isVisible()) {
+                    continue;
+                }
+
                 if (car.getLane() == laneStatus.getLaneNumber()) {
                     vehicleCount++;
                     accumulatedSpeed += car.getSpeed();
@@ -404,14 +442,20 @@ public class TrafficSimulator {
 
     private void refreshAverageSpeedAndCongestionLevel() {
         int accumulatedSpeed = 0;
+        int visibleCars = 0;
         boolean anyBlockedCars = false;
 
         for (Car car : cars) {
+            if (!car.isVisible()) {
+                continue;
+            }
+
             accumulatedSpeed += car.getSpeed();
+            visibleCars++;
             anyBlockedCars = anyBlockedCars || car.isBlocked();
         }
 
-        int averageSpeed = cars.isEmpty() ? 0 : accumulatedSpeed / cars.size();
+        int averageSpeed = visibleCars == 0 ? 0 : accumulatedSpeed / visibleCars;
         roadStatus.setAverageSpeed(averageSpeed);
         roadStatus.setCongestionLevel(resolveCongestionLevel(averageSpeed, anyBlockedCars));
     }
@@ -470,7 +514,7 @@ public class TrafficSimulator {
         double elapsedSeconds = elapsedMilliseconds / 1000.0;
 
         for (Car car : cars) {
-            if (car.getSpeed() <= 0 || car.isBlocked()) {
+            if (!car.isVisible() || car.getSpeed() <= 0 || car.isBlocked() || car.isCrashed()) {
                 continue;
             }
 
@@ -500,7 +544,12 @@ public class TrafficSimulator {
 
     private void applyNormalTrafficPattern(int speed) {
         for (Car car : cars) {
+            if (!car.isVisible() || car.isCrashed()) {
+                continue;
+            }
+
             car.setBlocked(false);
+            car.setChangingLane(false);
 
             if (car.getLane() == 1) {
                 car.setSpeed(speed);
@@ -516,6 +565,10 @@ public class TrafficSimulator {
         int priorityLane = getPriorityLaneNumber();
 
         for (Car car : cars) {
+            if (!car.isVisible() || car.isCrashed()) {
+                continue;
+            }
+
             car.setBlocked(false);
 
             if (car.getLane() == priorityLane) {
@@ -528,13 +581,27 @@ public class TrafficSimulator {
 
     private void applyAccidentTrafficPattern(int speed) {
         for (Car car : cars) {
+            if (!car.isVisible()) {
+                continue;
+            }
+
+            if (car.isCrashed()) {
+                car.setSpeed(0);
+                car.setBlocked(true);
+                car.setChangingLane(false);
+                continue;
+            }
+
             car.setBlocked(false);
+            car.setChangingLane(false);
 
             if (car.getLane() == blockedLane && isCarNearAccident(car)) {
                 if (tryRedirectCarFromBlockedLane(car)) {
                     car.setBlocked(false);
                     car.setSpeed(Math.max(speed + 6, 16));
+                    car.setChangingLane(true);
                 } else {
+                    car.setXPosition(Math.min(car.getXPosition(), ACCIDENT_QUEUE_POSITION));
                     car.setSpeed(0);
                     car.setBlocked(true);
                 }
@@ -542,7 +609,9 @@ public class TrafficSimulator {
             }
 
             if (car.getLane() == blockedLane && car.getXPosition() < (ACCIDENT_POSITION - ACCIDENT_APPROACH_DISTANCE)) {
-                car.setSpeed(Math.max(speed, 6));
+                car.setXPosition(Math.min(car.getXPosition(), ACCIDENT_QUEUE_POSITION));
+                car.setSpeed(0);
+                car.setBlocked(true);
                 continue;
             }
 
@@ -574,6 +643,10 @@ public class TrafficSimulator {
 
     private boolean isLaneAvailableForRedirect(int laneNumber, int position) {
         for (Car car : cars) {
+            if (!car.isVisible() || car.isCrashed()) {
+                continue;
+            }
+
             if (car.getLane() == laneNumber && Math.abs(car.getXPosition() - position) < 80) {
                 return false;
             }
@@ -621,6 +694,166 @@ public class TrafficSimulator {
 
     public int getCriticalSpeed() {
         return CRITICAL_SPEED;
+    }
+
+    public synchronized void createReportedAccidentScene() {
+        int accidentLane = findLaneWithHighestVehicleCount();
+        if (accidentLane <= 0) {
+            accidentLane = 2;
+        }
+
+        prepareAccidentScene(accidentLane, false);
+        addLog("Two vehicles collided in lane " + accidentLane + ". The lane was blocked.");
+    }
+
+    public synchronized void createProvokedAccidentScene() {
+        int accidentLane = findLaneWithHighestVehicleCount();
+        if (accidentLane <= 0) {
+            accidentLane = 2;
+        }
+
+        prepareAccidentScene(accidentLane, true);
+        addLog("Two vehicles collided in lane " + accidentLane + ". The lane was blocked.");
+    }
+
+    public synchronized void clearAccidentScene() {
+        Iterator<Car> iterator = cars.iterator();
+
+        while (iterator.hasNext()) {
+            Car car = iterator.next();
+
+            if (car.isCrashed()) {
+                iterator.remove();
+                continue;
+            }
+
+            car.setBlocked(false);
+            car.setChangingLane(false);
+            car.setVisible(true);
+        }
+
+        enableAllLanes();
+        replenishCarsIfNeeded();
+        addLog("Accident cleared. Lane reopened and traffic recovery started.");
+    }
+
+    private void prepareAccidentScene(int accidentLane, boolean collisionTriggered) {
+        blockLane(accidentLane);
+        clearLanePriorities();
+        restrictBlockedLaneTrafficLight(accidentLane);
+
+        List<Car> laneCars = new ArrayList<>();
+
+        for (Car car : cars) {
+            if (car.isVisible() && !car.isCrashed() && car.getLane() == accidentLane) {
+                laneCars.add(car);
+            }
+        }
+
+        while (laneCars.size() < 2) {
+            Car fallbackCar = findVisibleCarOutsideLane(accidentLane);
+
+            if (fallbackCar == null) {
+                break;
+            }
+
+            fallbackCar.setLane(accidentLane);
+            laneCars.add(fallbackCar);
+        }
+
+        if (laneCars.size() >= 2) {
+            Car firstCrashCar = laneCars.get(0);
+            Car secondCrashCar = laneCars.get(1);
+
+            firstCrashCar.setXPosition((int) ACCIDENT_POSITION - 10);
+            secondCrashCar.setXPosition((int) ACCIDENT_POSITION + (collisionTriggered ? 2 : 12));
+            firstCrashCar.setSpeed(0);
+            secondCrashCar.setSpeed(0);
+            firstCrashCar.setBlocked(true);
+            secondCrashCar.setBlocked(true);
+            firstCrashCar.setCrashed(true);
+            secondCrashCar.setCrashed(true);
+            firstCrashCar.setVisible(true);
+            secondCrashCar.setVisible(true);
+            firstCrashCar.setChangingLane(false);
+            secondCrashCar.setChangingLane(false);
+        }
+
+        for (Car car : cars) {
+            if (!car.isVisible() || car.isCrashed()) {
+                continue;
+            }
+
+            if (car.getLane() == accidentLane) {
+                if (car.getXPosition() >= ACCIDENT_QUEUE_POSITION) {
+                    car.setXPosition(ACCIDENT_QUEUE_POSITION - 25);
+                    car.setBlocked(true);
+                    car.setSpeed(0);
+                    continue;
+                }
+
+                int redirectLane = findRedirectLane(car);
+
+                if (redirectLane != accidentLane) {
+                    car.setLane(redirectLane);
+                    car.setChangingLane(true);
+                    car.setBlocked(false);
+                } else {
+                    car.setBlocked(true);
+                    car.setSpeed(0);
+                    car.setXPosition(Math.min(car.getXPosition(), ACCIDENT_QUEUE_POSITION));
+                }
+            }
+        }
+
+        roadStatus.setAccidentActive(true);
+        addDecisionLog("AccidentTrafficState blocked lane " + accidentLane + " and redirected vehicles.");
+        updateCars(CRITICAL_SPEED, true);
+    }
+
+    private Car findVisibleCarOutsideLane(int lane) {
+        for (Car car : cars) {
+            if (car.isVisible() && !car.isCrashed() && car.getLane() != lane) {
+                return car;
+            }
+        }
+
+        return null;
+    }
+
+    private int findRedirectLane(Car sourceCar) {
+        for (int lane = 1; lane <= LANE_COUNT; lane++) {
+            if (lane == blockedLane) {
+                continue;
+            }
+
+            if (isLaneAvailableForRedirect(lane, sourceCar.getXPosition())) {
+                return lane;
+            }
+        }
+
+        return blockedLane;
+    }
+
+    private void replenishCarsIfNeeded() {
+        while (countVisibleCars() < DEFAULT_CAR_COUNT) {
+            int lane = ((carSequence - 1) % LANE_COUNT) + 1;
+            int position = 40 + ((carSequence * 90) % 220);
+            cars.add(new Car(String.format("CAR-%03d", carSequence), lane, position, RECOVERY_SPEED, false));
+            carSequence++;
+        }
+    }
+
+    private int countVisibleCars() {
+        int visibleCars = 0;
+
+        for (Car car : cars) {
+            if (car.isVisible()) {
+                visibleCars++;
+            }
+        }
+
+        return visibleCars;
     }
 
     private String buildAcademicDelegationLog(String actionMethodName, String handlingStateName, String traceOutcome) {

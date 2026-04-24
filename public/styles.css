@@ -270,6 +270,7 @@ h2 {
             rgba(218, 75, 67, 0.08) 16px,
             rgba(218, 75, 67, 0.08) 32px
         );
+    box-shadow: inset 0 0 0 2px rgba(218, 75, 67, 0.36);
 }
 
 #lane-overlay-1 {
@@ -532,6 +533,21 @@ h2 {
     animation: blockedShake 1.8s ease-in-out infinite;
 }
 
+.car-crashed {
+    transform: translateX(-50%) rotate(-6deg);
+    box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(218, 75, 67, 0.34), 0 10px 22px rgba(0, 0, 0, 0.34);
+    animation: crashPulse 1.2s ease-in-out infinite;
+}
+
+.car-changing-lane {
+    outline: 2px solid rgba(226, 181, 52, 0.5);
+    animation: laneShift 1s ease-in-out infinite;
+}
+
+.road-scene.collision-impact {
+    animation: collisionFlash 0.8s ease-in-out 2;
+}
+
 .car-recovery {
     animation: recoveryPulse 2s ease-in-out infinite;
 }
@@ -711,6 +727,11 @@ h2 {
     box-shadow: 0 14px 26px rgba(47, 42, 118, 0.24);
 }
 
+.danger-button {
+    background: linear-gradient(135deg, #d24d46, #861f1b);
+    box-shadow: 0 14px 26px rgba(134, 31, 27, 0.26);
+}
+
 .demo-message {
     margin-top: 14px;
     padding: 14px 16px;
@@ -821,6 +842,21 @@ h2 {
 @keyframes recoveryPulse {
     0%, 100% { transform: translateX(-50%) scale(1); }
     50% { transform: translateX(-50%) scale(1.02); }
+}
+
+@keyframes crashPulse {
+    0%, 100% { transform: translateX(-50%) rotate(-6deg) scale(1); }
+    50% { transform: translateX(-50%) rotate(-3deg) scale(1.04); }
+}
+
+@keyframes laneShift {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-46%) translateY(-3px); }
+}
+
+@keyframes collisionFlash {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(218, 75, 67, 0.24); }
+    50% { box-shadow: inset 0 0 0 3px rgba(255, 210, 76, 0.8), 0 0 32px rgba(218, 75, 67, 0.34); }
 }
 
 @media (max-width: 1024px) {

@@ -33,11 +33,14 @@ public class FluentTrafficState implements TrafficState {
     public void reportAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("reportAccident", "FluentTrafficState", "Transition to AccidentTrafficState");
         simulator.setState(new AccidentTrafficState());
-        simulator.blockLane(2);
-        simulator.clearLanePriorities();
-        simulator.restrictBlockedLaneTrafficLight(2);
-        simulator.addDecisionLog("AccidentTrafficState blocked lane 2 and redirected vehicles.");
-        simulator.updateCars(simulator.getCriticalSpeed(), true);
+        simulator.createReportedAccidentScene();
+    }
+
+    @Override
+    public void provokeAccident(TrafficSimulator simulator) {
+        simulator.recordStateHandling("provokeAccident", "FluentTrafficState", "Transition to AccidentTrafficState");
+        simulator.setState(new AccidentTrafficState());
+        simulator.createProvokedAccidentScene();
     }
 
     @Override

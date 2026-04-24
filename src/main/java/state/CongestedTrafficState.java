@@ -32,12 +32,14 @@ public class CongestedTrafficState implements TrafficState {
     public void reportAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("reportAccident", "CongestedTrafficState", "Transition to AccidentTrafficState");
         simulator.setState(new AccidentTrafficState());
-        int accidentLane = simulator.findLaneWithHighestVehicleCount();
-        simulator.blockLane(accidentLane);
-        simulator.clearLanePriorities();
-        simulator.restrictBlockedLaneTrafficLight(accidentLane);
-        simulator.addDecisionLog("AccidentTrafficState blocked lane " + accidentLane + " and redirected vehicles.");
-        simulator.updateCars(simulator.getCriticalSpeed(), true);
+        simulator.createReportedAccidentScene();
+    }
+
+    @Override
+    public void provokeAccident(TrafficSimulator simulator) {
+        simulator.recordStateHandling("provokeAccident", "CongestedTrafficState", "Transition to AccidentTrafficState");
+        simulator.setState(new AccidentTrafficState());
+        simulator.createProvokedAccidentScene();
     }
 
     @Override

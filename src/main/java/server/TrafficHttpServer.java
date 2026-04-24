@@ -53,6 +53,7 @@ public class TrafficHttpServer {
         server.createContext("/api/increase-traffic", createActionHandler(() -> simulator.increaseTraffic()));
         server.createContext("/api/reduce-traffic", createActionHandler(() -> simulator.reduceTraffic()));
         server.createContext("/api/report-accident", createActionHandler(() -> simulator.reportAccident()));
+        server.createContext("/api/provoke-accident", createActionHandler(() -> simulator.provokeAccident()));
         server.createContext("/api/clear-accident", createActionHandler(() -> simulator.clearAccident()));
         server.createContext("/api/advance", createActionHandler(() -> simulator.advanceSimulation()));
         server.createContext("/api/reset", createActionHandler(() -> simulator.reset()));
@@ -113,7 +114,10 @@ public class TrafficHttpServer {
             builder.append("\"lane\":").append(car.getLane()).append(",");
             builder.append("\"xPosition\":").append(car.getXPosition()).append(",");
             builder.append("\"speed\":").append(car.getSpeed()).append(",");
-            builder.append("\"blocked\":").append(car.isBlocked());
+            builder.append("\"blocked\":").append(car.isBlocked()).append(",");
+            builder.append("\"crashed\":").append(car.isCrashed()).append(",");
+            builder.append("\"visible\":").append(car.isVisible()).append(",");
+            builder.append("\"changingLane\":").append(car.isChangingLane());
             builder.append("}");
 
             if (i < cars.size() - 1) {
