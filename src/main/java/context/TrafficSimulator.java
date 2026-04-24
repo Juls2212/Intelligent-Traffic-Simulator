@@ -21,11 +21,15 @@ public class TrafficSimulator {
     private final List<Car> cars;
     private final RoadStatus roadStatus;
     private final List<String> logs;
+    private final List<String> stateTransitions;
+    private String lastActionTrace;
 
     public TrafficSimulator() {
         this.cars = new ArrayList<>();
         this.logs = new ArrayList<>();
-        this.roadStatus = new RoadStatus("", "", "", 0, "", false);
+        this.stateTransitions = new ArrayList<>();
+        this.lastActionTrace = "No action has been handled yet.";
+        this.roadStatus = new RoadStatus("", "", "", "", lastActionTrace, 0, "", false);
         initializeSimulator(true);
     }
 
@@ -52,12 +56,16 @@ public class TrafficSimulator {
     public synchronized void reset() {
         cars.clear();
         logs.clear();
+        stateTransitions.clear();
+        lastActionTrace = "Action: reset handled by TrafficSimulator \u2192 Transition to FluentTrafficState";
         initializeSimulator(false);
         addLog("Simulator reset to the initial fluent state.");
     }
 
     public synchronized void setState(TrafficState state) {
+        String previousStateName = currentState == null ? "None" : currentState.getStateName();
         this.currentState = state;
+        logStateTransition(previousStateName, state.getStateName());
         refreshRoadStatus();
         addLog("State changed to " + state.getStateName() + ".");
     }
@@ -86,6 +94,8 @@ public class TrafficSimulator {
                 roadStatus.getStateName(),
                 roadStatus.getSpanishStateName(),
                 roadStatus.getDescription(),
+                roadStatus.getActiveStateClass(),
+                roadStatus.getLastActionTrace(),
                 roadStatus.getAverageSpeed(),
                 roadStatus.getCongestionLevel(),
                 roadStatus.isAccidentActive()
@@ -96,8 +106,21 @@ public class TrafficSimulator {
         return Collections.unmodifiableList(new ArrayList<>(logs));
     }
 
+    public synchronized List<String> getStateTransitions() {
+        return Collections.unmodifiableList(new ArrayList<>(stateTransitions));
+    }
+
     public synchronized TrafficState getCurrentState() {
         return currentState;
+    }
+
+    public synchronized String getLastActionTrace() {
+        return lastActionTrace;
+    }
+
+    public synchronized void setLastActionTrace(String lastActionTrace) {
+        this.lastActionTrace = lastActionTrace;
+        roadStatus.setLastActionTrace(lastActionTrace);
     }
 
     public synchronized void addLog(String message) {
@@ -108,11 +131,16 @@ public class TrafficSimulator {
         }
     }
 
+    public synchronized void logStateTransition(String from, String to) {
+        stateTransitions.add(from + " -> " + to);
+    }
+
     private void initializeSimulator(boolean addInitializationLog) {
         loadDefaultCars();
         currentState = new FluentTrafficState();
         refreshRoadStatus();
         updateCars(DEFAULT_SPEED, false);
+        roadStatus.setLastActionTrace(lastActionTrace);
 
         if (addInitializationLog) {
             addLog("Simulator initialized in fluent traffic state.");
@@ -123,6 +151,8 @@ public class TrafficSimulator {
         roadStatus.setStateName(currentState.getStateName());
         roadStatus.setSpanishStateName(currentState.getSpanishStateName());
         roadStatus.setDescription(currentState.getDescription());
+        roadStatus.setActiveStateClass(currentState.getClass().getSimpleName());
+        roadStatus.setLastActionTrace(lastActionTrace);
         roadStatus.setAccidentActive("AccidentTrafficState".equals(currentState.getStateName()));
     }
 

@@ -4,15 +4,20 @@ public class RoadStatus {
     private String stateName;
     private String spanishStateName;
     private String description;
+    private String activeStateClass;
+    private String lastActionTrace;
     private int averageSpeed;
     private String congestionLevel;
     private boolean accidentActive;
 
     public RoadStatus(String stateName, String spanishStateName, String description,
+                      String activeStateClass, String lastActionTrace,
                       int averageSpeed, String congestionLevel, boolean accidentActive) {
         this.stateName = stateName;
         this.spanishStateName = spanishStateName;
         this.description = description;
+        this.activeStateClass = activeStateClass;
+        this.lastActionTrace = lastActionTrace;
         this.averageSpeed = averageSpeed;
         this.congestionLevel = congestionLevel;
         this.accidentActive = accidentActive;
@@ -40,6 +45,22 @@ public class RoadStatus {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getActiveStateClass() {
+        return activeStateClass;
+    }
+
+    public void setActiveStateClass(String activeStateClass) {
+        this.activeStateClass = activeStateClass;
+    }
+
+    public String getLastActionTrace() {
+        return lastActionTrace;
+    }
+
+    public void setLastActionTrace(String lastActionTrace) {
+        this.lastActionTrace = lastActionTrace;
     }
 
     public int getAverageSpeed() {

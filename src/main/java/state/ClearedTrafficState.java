@@ -13,6 +13,7 @@ public class ClearedTrafficState implements TrafficState {
 
     @Override
     public void increaseTraffic(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: increaseTraffic handled by ClearedTrafficState \u2192 Transition to CongestedTrafficState");
         simulator.addLog("Traffic increased during recovery. The road becomes congested again.");
         simulator.setState(new CongestedTrafficState());
         simulator.updateCars(LOW_SPEED, false);
@@ -20,12 +21,14 @@ public class ClearedTrafficState implements TrafficState {
 
     @Override
     public void reduceTraffic(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: reduceTraffic handled by ClearedTrafficState \u2192 Remains in ClearedTrafficState");
         simulator.addLog("Traffic reduction supports recovery and improves vehicle movement.");
         simulator.updateCars(RECOVERY_SPEED + 10, false);
     }
 
     @Override
     public void reportAccident(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: reportAccident handled by ClearedTrafficState \u2192 Transition to AccidentTrafficState");
         simulator.addLog("A new accident was reported during recovery.");
         simulator.setState(new AccidentTrafficState());
         simulator.updateCars(CRITICAL_SPEED, true);
@@ -33,11 +36,13 @@ public class ClearedTrafficState implements TrafficState {
 
     @Override
     public void clearAccident(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: clearAccident handled by ClearedTrafficState \u2192 Remains in ClearedTrafficState");
         simulator.addLog("The road is already being cleared and recovered.");
     }
 
     @Override
     public void advanceSimulation(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: advanceSimulation handled by ClearedTrafficState \u2192 Transition to FluentTrafficState");
         simulator.addLog("Simulation advanced in recovery mode. Traffic returns to fluent conditions.");
         simulator.setState(new FluentTrafficState());
         simulator.updateCars(HIGH_SPEED, false);

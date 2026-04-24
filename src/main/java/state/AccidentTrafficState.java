@@ -11,23 +11,27 @@ public class AccidentTrafficState implements TrafficState {
 
     @Override
     public void increaseTraffic(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: increaseTraffic handled by AccidentTrafficState \u2192 Remains in AccidentTrafficState");
         simulator.addLog("Traffic increased around the accident area, making congestion worse.");
         simulator.updateCars(CRITICAL_SPEED, true);
     }
 
     @Override
     public void reduceTraffic(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: reduceTraffic handled by AccidentTrafficState \u2192 Remains in AccidentTrafficState");
         simulator.addLog("Reducing traffic volume does not solve the active accident.");
         simulator.updateCars(CRITICAL_SPEED, true);
     }
 
     @Override
     public void reportAccident(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: reportAccident handled by AccidentTrafficState \u2192 Remains in AccidentTrafficState");
         simulator.addLog("The accident state is already active.");
     }
 
     @Override
     public void clearAccident(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: clearAccident handled by AccidentTrafficState \u2192 Transition to ClearedTrafficState");
         simulator.addLog("Emergency response cleared the accident. The road moves into recovery.");
         simulator.setState(new ClearedTrafficState());
         simulator.updateCars(RECOVERY_SPEED, false);
@@ -35,6 +39,7 @@ public class AccidentTrafficState implements TrafficState {
 
     @Override
     public void advanceSimulation(TrafficSimulator simulator) {
+        simulator.setLastActionTrace("Action: advanceSimulation handled by AccidentTrafficState \u2192 Remains in AccidentTrafficState");
         simulator.addLog("Simulation advanced with blocked traffic near the accident area.");
         simulator.updateCars(CRITICAL_SPEED, true);
     }

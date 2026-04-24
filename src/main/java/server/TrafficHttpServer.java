@@ -72,17 +72,21 @@ public class TrafficHttpServer {
         RoadStatus status = simulator.getRoadStatus();
         List<Car> cars = simulator.getCars();
         List<String> logs = simulator.getLogs();
+        List<String> stateTransitions = simulator.getStateTransitions();
 
         StringBuilder builder = new StringBuilder();
         builder.append("{");
         builder.append("\"currentState\":\"").append(escapeJson(status.getStateName())).append("\",");
         builder.append("\"spanishStateName\":\"").append(escapeJson(status.getSpanishStateName())).append("\",");
         builder.append("\"description\":\"").append(escapeJson(status.getDescription())).append("\",");
+        builder.append("\"activeStateClass\":\"").append(escapeJson(status.getActiveStateClass())).append("\",");
+        builder.append("\"lastActionTrace\":\"").append(escapeJson(status.getLastActionTrace())).append("\",");
         builder.append("\"averageSpeed\":").append(status.getAverageSpeed()).append(",");
         builder.append("\"congestionLevel\":\"").append(escapeJson(status.getCongestionLevel())).append("\",");
         builder.append("\"accidentActive\":").append(status.isAccidentActive()).append(",");
         builder.append("\"cars\":").append(buildCarsJson(cars)).append(",");
-        builder.append("\"logs\":").append(buildLogsJson(logs));
+        builder.append("\"logs\":").append(buildLogsJson(logs)).append(",");
+        builder.append("\"stateTransitions\":").append(buildLogsJson(stateTransitions));
         builder.append("}");
         return builder.toString();
     }
