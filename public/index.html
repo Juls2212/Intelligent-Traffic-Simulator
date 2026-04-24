@@ -3,67 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Inteligente de Trafico</title>
+    <title>Simulador de Tráfico Inteligente</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<main class="layout">
-    <section class="hero">
-        <p class="eyebrow">Patron State</p>
-        <h1>Simulador Inteligente de Trafico</h1>
-        <p class="hero-text">
-            Controla el estado del trafico y observa como cambia el comportamiento del sistema sin usar
-            condicionales en el contexto.
-        </p>
-    </section>
-
-    <section class="panel panel-status">
-        <h2>Estado actual</h2>
-        <div class="status-grid">
-            <article class="status-card">
-                <span class="label">Estado</span>
-                <strong id="state-name">Cargando...</strong>
-            </article>
-            <article class="status-card">
-                <span class="label">Clase</span>
-                <strong id="state-class">-</strong>
-            </article>
-            <article class="status-card">
-                <span class="label">Velocidad promedio</span>
-                <strong id="average-speed">-</strong>
-            </article>
-            <article class="status-card">
-                <span class="label">Congestion</span>
-                <strong id="congestion-level">-</strong>
-            </article>
-            <article class="status-card">
-                <span class="label">Accidente</span>
-                <strong id="accident-active">-</strong>
-            </article>
+<main class="page-shell">
+    <section class="hero-panel">
+        <div class="hero-copy">
+            <p class="hero-tag">Patrón State aplicado al tráfico urbano</p>
+            <h1>Simulador de Tráfico Inteligente</h1>
+            <p class="hero-description">
+                Observa cómo el mismo conjunto de acciones produce respuestas distintas según el estado activo del
+                simulador.
+            </p>
         </div>
-        <p id="state-description" class="description"></p>
-    </section>
-
-    <section class="panel panel-actions">
-        <h2>Controles de simulacion</h2>
-        <div class="actions">
-            <button data-action="/api/increase-traffic">Aumentar trafico</button>
-            <button data-action="/api/reduce-traffic">Reducir trafico</button>
-            <button data-action="/api/report-accident">Reportar accidente</button>
-            <button data-action="/api/clear-accident">Despejar accidente</button>
-            <button data-action="/api/advance">Avanzar simulacion</button>
-            <button data-action="/api/reset" class="secondary">Reiniciar</button>
+        <div class="hero-side-card">
+            <span class="hero-side-label">Lectura rápida</span>
+            <strong id="state-badge" class="state-badge">Cargando...</strong>
+            <p id="state-badge-description" class="hero-side-text">
+                Preparando la visualización del estado actual.
+            </p>
         </div>
     </section>
 
-    <section class="panel panel-road">
-        <h2>Vehiculos</h2>
-        <div id="cars-container" class="cars-grid"></div>
+    <section class="dashboard-grid">
+        <article class="panel road-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Simulación visual</p>
+                    <h2>Carretera principal</h2>
+                </div>
+                <div id="recovery-banner" class="recovery-banner" hidden>
+                    Vía en recuperación
+                </div>
+            </div>
+
+            <div id="road-scene" class="road-scene state-fluent">
+                <div class="road-glow"></div>
+                <div class="lane-markers">
+                    <span class="lane-marker lane-marker-1"></span>
+                    <span class="lane-marker lane-marker-2"></span>
+                </div>
+                <div class="lane-labels">
+                    <span>Carril 1</span>
+                    <span>Carril 2</span>
+                    <span>Carril 3</span>
+                </div>
+                <div id="accident-marker" class="accident-marker" hidden>
+                    <span class="accident-icon">!</span>
+                    <span class="accident-text">Accidente</span>
+                </div>
+                <div id="cars-layer" class="cars-layer"></div>
+            </div>
+
+            <div class="road-legend">
+                <span><i class="legend-dot legend-dot-fast"></i> Fluido</span>
+                <span><i class="legend-dot legend-dot-slow"></i> Congestionado</span>
+                <span><i class="legend-dot legend-dot-alert"></i> Accidente</span>
+                <span><i class="legend-dot legend-dot-recovery"></i> Despejado</span>
+            </div>
+        </article>
+
+        <article class="panel status-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Estado del sistema</p>
+                    <h2>Resumen operativo</h2>
+                </div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-card accent-card">
+                    <span class="status-label">Estado actual</span>
+                    <strong id="state-name">Cargando...</strong>
+                    <p id="state-description" class="status-help"></p>
+                </div>
+                <div class="status-card">
+                    <span class="status-label">Clase del estado</span>
+                    <strong id="state-class">-</strong>
+                </div>
+                <div class="status-card">
+                    <span class="status-label">Velocidad promedio</span>
+                    <strong id="average-speed">-</strong>
+                </div>
+                <div class="status-card">
+                    <span class="status-label">Nivel de congestión</span>
+                    <strong id="congestion-level">-</strong>
+                </div>
+                <div class="status-card">
+                    <span class="status-label">Accidente</span>
+                    <strong id="accident-active">-</strong>
+                </div>
+                <div class="status-card">
+                    <span class="status-label">Vehículos activos</span>
+                    <strong id="cars-count">-</strong>
+                </div>
+            </div>
+        </article>
     </section>
 
-    <section class="panel panel-logs">
-        <h2>Eventos recientes</h2>
-        <ul id="logs-list" class="logs-list"></ul>
+    <section class="lower-grid">
+        <article class="panel controls-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Acciones</p>
+                    <h2>Controles del simulador</h2>
+                </div>
+            </div>
+
+            <div class="button-grid">
+                <button class="action-button" data-action="/api/increase-traffic">Aumentar tráfico</button>
+                <button class="action-button" data-action="/api/reduce-traffic">Reducir tráfico</button>
+                <button class="action-button" data-action="/api/report-accident">Reportar accidente</button>
+                <button class="action-button" data-action="/api/clear-accident">Despejar accidente</button>
+                <button class="action-button" data-action="/api/advance">Avanzar simulación</button>
+                <button class="action-button secondary-button" data-action="/api/reset">Reiniciar simulador</button>
+            </div>
+        </article>
+
+        <article class="panel explanation-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Diseño orientado a objetos</p>
+                    <h2>Estructura del patrón State</h2>
+                </div>
+            </div>
+
+            <ul class="explanation-list">
+                <li>Contexto: TrafficSimulator</li>
+                <li>Interfaz State: TrafficState</li>
+                <li>Estados concretos: FluentTrafficState, CongestedTrafficState, AccidentTrafficState, ClearedTrafficState</li>
+                <li>Cada estado decide cómo responder a las mismas acciones.</li>
+            </ul>
+        </article>
+
+        <article class="panel logs-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Trazabilidad</p>
+                    <h2>Registro de eventos</h2>
+                </div>
+            </div>
+
+            <ul id="logs-list" class="logs-list"></ul>
+        </article>
     </section>
 </main>
 <script src="/app.js"></script>
