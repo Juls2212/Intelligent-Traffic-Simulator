@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Tráfico Inteligente</title>
+    <title>Simulador de Trafico Inteligente</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <main class="page-shell">
     <section class="hero-panel">
         <div class="hero-copy">
-            <p class="hero-tag">Patrón State aplicado al tráfico urbano</p>
-            <h1>Simulador de Tráfico Inteligente</h1>
+            <p class="hero-tag">Patron State aplicado al trafico urbano</p>
+            <h1>Simulador de Trafico Inteligente</h1>
             <p class="hero-description">
-                Observa cómo el mismo conjunto de acciones produce respuestas distintas según el estado activo del
-                simulador.
+                Observa como el mismo conjunto de acciones produce respuestas distintas segun el estado activo del
+                simulador y como el contexto delega cada operacion al objeto State correspondiente.
             </p>
         </div>
-        <div class="hero-side-card">
-            <span class="hero-side-label">Lectura rápida</span>
+        <div id="state-hero-card" class="hero-side-card state-theme-fluent">
+            <span class="hero-side-label">Lectura rapida</span>
             <strong id="state-badge" class="state-badge">Cargando...</strong>
             <p id="state-badge-description" class="hero-side-text">
-                Preparando la visualización del estado actual.
+                Preparando la visualizacion del estado actual.
             </p>
         </div>
     </section>
@@ -30,12 +30,16 @@
         <article class="panel road-panel">
             <div class="panel-heading">
                 <div>
-                    <p class="section-kicker">Simulación visual</p>
+                    <p class="section-kicker">Simulacion visual</p>
                     <h2>Carretera principal</h2>
                 </div>
                 <div id="recovery-banner" class="recovery-banner" hidden>
-                    Vía en recuperación
+                    Via en recuperacion
                 </div>
+            </div>
+
+            <div id="delegation-banner" class="delegation-banner" hidden>
+                La accion fue delegada al estado actual
             </div>
 
             <div id="road-scene" class="road-scene state-fluent">
@@ -73,7 +77,7 @@
             </div>
 
             <div class="status-grid">
-                <div class="status-card accent-card">
+                <div id="state-summary-card" class="status-card accent-card state-accent-fluent">
                     <span class="status-label">Estado actual</span>
                     <strong id="state-name">Cargando...</strong>
                     <p id="state-description" class="status-help"></p>
@@ -87,7 +91,7 @@
                     <strong id="average-speed">-</strong>
                 </div>
                 <div class="status-card">
-                    <span class="status-label">Nivel de congestión</span>
+                    <span class="status-label">Nivel de congestion</span>
                     <strong id="congestion-level">-</strong>
                 </div>
                 <div class="status-card">
@@ -95,7 +99,7 @@
                     <strong id="accident-active">-</strong>
                 </div>
                 <div class="status-card">
-                    <span class="status-label">Vehículos activos</span>
+                    <span class="status-label">Vehiculos activos</span>
                     <strong id="cars-count">-</strong>
                 </div>
             </div>
@@ -112,20 +116,48 @@
             </div>
 
             <div class="button-grid">
-                <button class="action-button" data-action="/api/increase-traffic">Aumentar tráfico</button>
-                <button class="action-button" data-action="/api/reduce-traffic">Reducir tráfico</button>
+                <button class="action-button" data-action="/api/increase-traffic">Aumentar trafico</button>
+                <button class="action-button" data-action="/api/reduce-traffic">Reducir trafico</button>
                 <button class="action-button" data-action="/api/report-accident">Reportar accidente</button>
                 <button class="action-button" data-action="/api/clear-accident">Despejar accidente</button>
-                <button class="action-button" data-action="/api/advance">Avanzar simulación</button>
+                <button class="action-button" data-action="/api/advance">Avanzar simulacion</button>
                 <button class="action-button secondary-button" data-action="/api/reset">Reiniciar simulador</button>
+            </div>
+        </article>
+
+        <article id="evidence-panel" class="panel evidence-panel state-accent-fluent">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Demostracion academica</p>
+                    <h2>Evidencia del patron State</h2>
+                </div>
+            </div>
+
+            <div class="evidence-grid">
+                <div class="evidence-card">
+                    <span class="status-label">Estado actual</span>
+                    <strong id="evidence-state">-</strong>
+                </div>
+                <div class="evidence-card">
+                    <span class="status-label">Clase activa</span>
+                    <strong id="evidence-class">-</strong>
+                </div>
+                <div class="evidence-card evidence-card-wide">
+                    <span class="status-label">Ultima accion ejecutada</span>
+                    <strong id="evidence-action">-</strong>
+                </div>
+                <div class="evidence-card evidence-card-wide">
+                    <span class="status-label">Resultado de la accion</span>
+                    <strong id="evidence-result">-</strong>
+                </div>
             </div>
         </article>
 
         <article class="panel explanation-panel">
             <div class="panel-heading">
                 <div>
-                    <p class="section-kicker">Diseño orientado a objetos</p>
-                    <h2>Estructura del patrón State</h2>
+                    <p class="section-kicker">Diseno orientado a objetos</p>
+                    <h2>Estructura del patron State</h2>
                 </div>
             </div>
 
@@ -133,14 +165,26 @@
                 <li>Contexto: TrafficSimulator</li>
                 <li>Interfaz State: TrafficState</li>
                 <li>Estados concretos: FluentTrafficState, CongestedTrafficState, AccidentTrafficState, ClearedTrafficState</li>
-                <li>Cada estado decide cómo responder a las mismas acciones.</li>
+                <li>Cada estado decide como responder a las mismas acciones.</li>
+                <li>El mismo metodo produce distintos resultados segun el estado actual del objeto.</li>
             </ul>
+        </article>
+
+        <article class="panel transition-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Trazabilidad del patron</p>
+                    <h2>Historial de transiciones</h2>
+                </div>
+            </div>
+
+            <ul id="transitions-list" class="transition-list"></ul>
         </article>
 
         <article class="panel logs-panel">
             <div class="panel-heading">
                 <div>
-                    <p class="section-kicker">Trazabilidad</p>
+                    <p class="section-kicker">Eventos del simulador</p>
                     <h2>Registro de eventos</h2>
                 </div>
             </div>

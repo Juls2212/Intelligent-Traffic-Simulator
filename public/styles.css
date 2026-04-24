@@ -1,20 +1,21 @@
 :root {
-    --background-start: #f0eadf;
-    --background-end: #ddd5c8;
-    --panel-surface: rgba(255, 250, 243, 0.86);
-    --panel-border: rgba(58, 44, 35, 0.12);
+    --background-start: #f1ece2;
+    --background-end: #dcd4c8;
+    --panel-surface: rgba(255, 250, 244, 0.88);
+    --panel-border: rgba(57, 43, 34, 0.12);
     --panel-shadow: 0 24px 80px rgba(39, 30, 24, 0.14);
-    --text-main: #2b241f;
-    --text-soft: #6f6257;
-    --accent-main: #c85c35;
-    --accent-dark: #94361b;
-    --accent-cool: #1f6c78;
-    --road-dark: #1a1f28;
-    --road-mid: #272e38;
-    --road-line: rgba(255, 240, 186, 0.92);
-    --danger: #db4e45;
-    --recovery: #2d9071;
-    --card-light: rgba(255, 255, 255, 0.68);
+    --text-main: #2c241f;
+    --text-soft: #6e6257;
+    --accent-main: #c75d36;
+    --accent-dark: #95381d;
+    --road-dark: #171d27;
+    --road-mid: #252c35;
+    --road-line: rgba(255, 240, 186, 0.9);
+    --fluent: #4e9eff;
+    --congested: #e2b534;
+    --accident: #da4b43;
+    --cleared: #2ea673;
+    --card-light: rgba(255, 255, 255, 0.7);
     --car-red: #f35d4f;
     --car-gold: #efb449;
     --car-blue: #56a5ff;
@@ -31,13 +32,13 @@ body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-main);
     background:
-        radial-gradient(circle at top left, rgba(200, 92, 53, 0.18), transparent 32%),
-        radial-gradient(circle at right center, rgba(31, 108, 120, 0.14), transparent 28%),
-        linear-gradient(160deg, var(--background-start) 0%, #ebe2d4 52%, var(--background-end) 100%);
+        radial-gradient(circle at top left, rgba(199, 93, 54, 0.16), transparent 30%),
+        radial-gradient(circle at right center, rgba(78, 158, 255, 0.12), transparent 28%),
+        linear-gradient(160deg, var(--background-start) 0%, #ebe3d7 50%, var(--background-end) 100%);
 }
 
 .page-shell {
-    width: min(1260px, calc(100% - 32px));
+    width: min(1280px, calc(100% - 32px));
     margin: 0 auto;
     padding: 32px 0 48px;
 }
@@ -51,8 +52,20 @@ body {
 
 .hero-panel {
     grid-template-columns: 1.6fr 0.9fr;
-    align-items: stretch;
     margin-bottom: 20px;
+}
+
+.dashboard-grid {
+    grid-template-columns: 1.55fr 0.95fr;
+    margin-bottom: 20px;
+}
+
+.lower-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.logs-panel {
+    grid-column: 1 / -1;
 }
 
 .hero-copy,
@@ -65,8 +78,12 @@ body {
     box-shadow: var(--panel-shadow);
 }
 
+.hero-copy,
+.panel {
+    padding: 24px;
+}
+
 .hero-copy {
-    padding: 30px 32px;
     position: relative;
     overflow: hidden;
 }
@@ -74,11 +91,12 @@ body {
 .hero-copy::after {
     content: "";
     position: absolute;
-    inset: auto -80px -110px auto;
-    width: 220px;
-    height: 220px;
+    right: -70px;
+    bottom: -110px;
+    width: 240px;
+    height: 240px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(200, 92, 53, 0.18), transparent 68%);
+    background: radial-gradient(circle, rgba(199, 93, 54, 0.18), transparent 68%);
 }
 
 .hero-side-card {
@@ -86,9 +104,24 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background:
-        linear-gradient(145deg, rgba(31, 108, 120, 0.94), rgba(17, 53, 67, 0.94));
     color: #f7f8fa;
+    transition: background 260ms ease, box-shadow 260ms ease, transform 260ms ease;
+}
+
+.state-theme-fluent {
+    background: linear-gradient(145deg, rgba(42, 101, 176, 0.95), rgba(20, 61, 120, 0.96));
+}
+
+.state-theme-congested {
+    background: linear-gradient(145deg, rgba(182, 139, 31, 0.96), rgba(125, 87, 17, 0.96));
+}
+
+.state-theme-accident {
+    background: linear-gradient(145deg, rgba(176, 46, 38, 0.96), rgba(106, 21, 18, 0.97));
+}
+
+.state-theme-cleared {
+    background: linear-gradient(145deg, rgba(35, 126, 90, 0.96), rgba(21, 87, 60, 0.97));
 }
 
 .hero-tag,
@@ -107,7 +140,7 @@ body {
 }
 
 .hero-side-label {
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.74);
 }
 
 h1,
@@ -124,14 +157,13 @@ h1 {
 }
 
 h2 {
-    font-size: 1.4rem;
+    font-size: 1.38rem;
 }
 
 .hero-description {
-    max-width: 640px;
+    max-width: 680px;
     margin-top: 16px;
     color: var(--text-soft);
-    font-size: 1.04rem;
     line-height: 1.65;
 }
 
@@ -144,31 +176,14 @@ h2 {
     padding: 0 18px;
     margin: 2px 0 12px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14);
     font-size: 1.2rem;
     font-weight: 800;
 }
 
 .hero-side-text {
-    color: rgba(255, 255, 255, 0.76);
+    color: rgba(255, 255, 255, 0.8);
     line-height: 1.6;
-}
-
-.dashboard-grid {
-    grid-template-columns: 1.55fr 0.95fr;
-    margin-bottom: 20px;
-}
-
-.lower-grid {
-    grid-template-columns: 1fr 1fr;
-}
-
-.logs-panel {
-    grid-column: 1 / -1;
-}
-
-.panel {
-    padding: 24px;
 }
 
 .panel-heading {
@@ -177,6 +192,45 @@ h2 {
     align-items: flex-start;
     gap: 14px;
     margin-bottom: 18px;
+}
+
+.delegation-banner {
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 43, 34, 0.08);
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--text-main);
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+
+.delegation-banner.active {
+    opacity: 1;
+    transform: translateY(0);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.delegation-banner.state-fluent {
+    border-color: rgba(78, 158, 255, 0.36);
+    color: #1f5cb0;
+}
+
+.delegation-banner.state-congested {
+    border-color: rgba(226, 181, 52, 0.46);
+    color: #8a6508;
+}
+
+.delegation-banner.state-accident {
+    border-color: rgba(218, 75, 67, 0.42);
+    color: #9b201b;
+}
+
+.delegation-banner.state-cleared {
+    border-color: rgba(46, 166, 115, 0.42);
+    color: #156846;
 }
 
 .road-scene {
@@ -188,6 +242,23 @@ h2 {
         linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 34%),
         linear-gradient(180deg, var(--road-mid) 0%, var(--road-dark) 100%);
     border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: box-shadow 220ms ease, outline-color 220ms ease;
+}
+
+.road-scene.state-fluent {
+    box-shadow: inset 0 0 0 2px rgba(78, 158, 255, 0.22);
+}
+
+.road-scene.state-congested {
+    box-shadow: inset 0 0 0 2px rgba(226, 181, 52, 0.22);
+}
+
+.road-scene.state-accident {
+    box-shadow: inset 0 0 0 2px rgba(218, 75, 67, 0.24);
+}
+
+.road-scene.state-cleared {
+    box-shadow: inset 0 0 0 2px rgba(46, 166, 115, 0.24);
 }
 
 .road-scene::before,
@@ -197,8 +268,7 @@ h2 {
     left: 0;
     right: 0;
     height: 18px;
-    background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
     z-index: 1;
 }
 
@@ -214,8 +284,23 @@ h2 {
     position: absolute;
     inset: auto 0 0 0;
     height: 120px;
-    background: linear-gradient(180deg, transparent, rgba(29, 181, 255, 0.1));
     pointer-events: none;
+}
+
+.road-scene.state-fluent .road-glow {
+    background: linear-gradient(180deg, transparent, rgba(78, 158, 255, 0.18));
+}
+
+.road-scene.state-congested .road-glow {
+    background: linear-gradient(180deg, transparent, rgba(226, 181, 52, 0.16));
+}
+
+.road-scene.state-accident .road-glow {
+    background: linear-gradient(180deg, transparent, rgba(218, 75, 67, 0.18));
+}
+
+.road-scene.state-cleared .road-glow {
+    background: linear-gradient(180deg, transparent, rgba(46, 166, 115, 0.18));
 }
 
 .lane-markers {
@@ -228,7 +313,6 @@ h2 {
     left: 0;
     width: 100%;
     border-top: 4px dashed var(--road-line);
-    opacity: 0.92;
 }
 
 .lane-marker-1 {
@@ -249,7 +333,6 @@ h2 {
     grid-template-columns: repeat(3, 1fr);
     color: rgba(255, 255, 255, 0.54);
     font-size: 0.8rem;
-    letter-spacing: 0.04em;
 }
 
 .cars-layer {
@@ -263,15 +346,9 @@ h2 {
     width: 70px;
     height: 34px;
     border-radius: 14px 12px 10px 10px;
-    box-shadow:
-        inset 0 -6px 0 rgba(0, 0, 0, 0.18),
-        0 10px 22px rgba(0, 0, 0, 0.28);
+    box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.18), 0 10px 22px rgba(0, 0, 0, 0.28);
     transform: translateX(-50%);
-    transition:
-        left 900ms cubic-bezier(0.2, 0.85, 0.2, 1),
-        top 420ms ease,
-        filter 240ms ease,
-        opacity 240ms ease;
+    transition: left 900ms cubic-bezier(0.2, 0.85, 0.2, 1), top 420ms ease, filter 240ms ease, opacity 240ms ease;
 }
 
 .car-visual::before,
@@ -320,7 +397,7 @@ h2 {
     padding: 4px 8px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.78);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.72rem;
     white-space: nowrap;
 }
@@ -358,10 +435,10 @@ h2 {
     transform: translateY(-50%);
     padding: 10px 14px;
     border-radius: 999px;
-    background: rgba(219, 78, 69, 0.16);
-    border: 1px solid rgba(219, 78, 69, 0.46);
+    background: rgba(218, 75, 67, 0.16);
+    border: 1px solid rgba(218, 75, 67, 0.46);
     color: #ffe8e5;
-    box-shadow: 0 0 36px rgba(219, 78, 69, 0.34);
+    box-shadow: 0 0 36px rgba(218, 75, 67, 0.34);
 }
 
 .accident-icon {
@@ -370,21 +447,20 @@ h2 {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: var(--danger);
+    background: var(--accident);
     font-weight: 800;
 }
 
 .accident-text {
     font-size: 0.85rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
 }
 
 .recovery-banner {
     padding: 10px 14px;
     border-radius: 999px;
-    background: rgba(45, 144, 113, 0.14);
-    color: var(--recovery);
+    background: rgba(46, 166, 115, 0.14);
+    color: var(--cleared);
     font-weight: 700;
 }
 
@@ -405,22 +481,25 @@ h2 {
     border-radius: 50%;
 }
 
-.legend-dot-fast { background: #67c7ff; }
-.legend-dot-slow { background: #efb449; }
-.legend-dot-alert { background: var(--danger); }
-.legend-dot-recovery { background: var(--recovery); }
+.legend-dot-fast { background: var(--fluent); }
+.legend-dot-slow { background: var(--congested); }
+.legend-dot-alert { background: var(--accident); }
+.legend-dot-recovery { background: var(--cleared); }
 
 .status-grid,
-.button-grid {
+.button-grid,
+.evidence-grid {
     display: grid;
     gap: 14px;
 }
 
-.status-grid {
+.status-grid,
+.evidence-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.status-card {
+.status-card,
+.evidence-card {
     padding: 18px;
     border-radius: 20px;
     background: var(--card-light);
@@ -429,9 +508,30 @@ h2 {
 
 .accent-card {
     grid-column: 1 / -1;
-    background:
-        linear-gradient(135deg, rgba(200, 92, 53, 0.1), rgba(31, 108, 120, 0.09)),
-        rgba(255, 255, 255, 0.7);
+}
+
+.evidence-card-wide {
+    grid-column: 1 / -1;
+}
+
+.status-accent-fluent,
+.state-accent-fluent {
+    background: linear-gradient(135deg, rgba(78, 158, 255, 0.16), rgba(255, 255, 255, 0.76));
+}
+
+.status-accent-congested,
+.state-accent-congested {
+    background: linear-gradient(135deg, rgba(226, 181, 52, 0.2), rgba(255, 255, 255, 0.76));
+}
+
+.status-accent-accident,
+.state-accent-accident {
+    background: linear-gradient(135deg, rgba(218, 75, 67, 0.18), rgba(255, 255, 255, 0.76));
+}
+
+.status-accent-cleared,
+.state-accent-cleared {
+    background: linear-gradient(135deg, rgba(46, 166, 115, 0.18), rgba(255, 255, 255, 0.76));
 }
 
 .status-label {
@@ -441,9 +541,11 @@ h2 {
     font-size: 0.85rem;
 }
 
-.status-card strong {
+.status-card strong,
+.evidence-card strong {
     display: block;
-    font-size: 1.06rem;
+    font-size: 1.05rem;
+    line-height: 1.45;
 }
 
 .status-help {
@@ -487,7 +589,8 @@ h2 {
 }
 
 .explanation-list,
-.logs-list {
+.logs-list,
+.transition-list {
     margin: 0;
     padding-left: 18px;
 }
@@ -497,34 +600,25 @@ h2 {
     line-height: 1.7;
 }
 
-.logs-list {
+.logs-list,
+.transition-list {
     display: grid;
     gap: 12px;
     color: var(--text-soft);
     line-height: 1.55;
 }
 
-.logs-list li {
+.logs-list li,
+.transition-list li {
     padding: 12px 14px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.58);
     border: 1px solid rgba(56, 43, 34, 0.07);
 }
 
-.road-scene.state-fluent .road-glow {
-    background: linear-gradient(180deg, transparent, rgba(103, 199, 255, 0.16));
-}
-
-.road-scene.state-congested .road-glow {
-    background: linear-gradient(180deg, transparent, rgba(239, 180, 73, 0.14));
-}
-
-.road-scene.state-accident .road-glow {
-    background: linear-gradient(180deg, transparent, rgba(219, 78, 69, 0.16));
-}
-
-.road-scene.state-cleared .road-glow {
-    background: linear-gradient(180deg, transparent, rgba(45, 144, 113, 0.16));
+.transition-list li {
+    font-weight: 700;
+    color: var(--text-main);
 }
 
 @keyframes fastPulse {
@@ -539,10 +633,10 @@ h2 {
 
 @keyframes blockedShake {
     0%, 100% { transform: translateX(-50%) translateY(0); }
-    20% { transform: translateX(calc(-50% - 1px)) translateY(0); }
-    40% { transform: translateX(calc(-50% + 1px)) translateY(0); }
-    60% { transform: translateX(calc(-50% - 1px)) translateY(0); }
-    80% { transform: translateX(calc(-50% + 1px)) translateY(0); }
+    20% { transform: translateX(calc(-50% - 1px)); }
+    40% { transform: translateX(calc(-50% + 1px)); }
+    60% { transform: translateX(calc(-50% - 1px)); }
+    80% { transform: translateX(calc(-50% + 1px)); }
 }
 
 @keyframes recoveryPulse {
@@ -560,20 +654,26 @@ h2 {
 
 @media (max-width: 720px) {
     .page-shell {
-        width: min(100% - 20px, 1260px);
+        width: min(100% - 20px, 1280px);
         padding-top: 20px;
     }
 
-    .panel,
     .hero-copy,
-    .hero-side-card {
+    .hero-side-card,
+    .panel {
         padding: 20px;
         border-radius: 22px;
     }
 
     .status-grid,
-    .button-grid {
+    .button-grid,
+    .evidence-grid {
         grid-template-columns: 1fr;
+    }
+
+    .accent-card,
+    .evidence-card-wide {
+        grid-column: auto;
     }
 
     .road-scene {
