@@ -2,6 +2,10 @@ package state;
 
 import context.TrafficSimulator;
 
+/**
+ * State interface of the State design pattern.
+ * Each implementation defines how the simulator reacts to the same actions.
+ */
 public interface TrafficState {
     void increaseTraffic(TrafficSimulator simulator);
 

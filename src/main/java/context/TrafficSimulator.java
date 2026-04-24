@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Context of the State design pattern.
+ * It stores the active TrafficState and delegates every traffic action to it.
+ */
 public class TrafficSimulator {
     private static final int DEFAULT_SPEED = 90;
     private static final int MAX_LOG_ENTRIES = 20;
@@ -22,11 +26,7 @@ public class TrafficSimulator {
         this.cars = new ArrayList<>();
         this.logs = new ArrayList<>();
         this.roadStatus = new RoadStatus("", "", "", 0, "", false);
-        loadDefaultCars();
-        this.currentState = new FluentTrafficState();
-        refreshRoadStatus();
-        addLog("Simulator initialized in fluent traffic state.");
-        updateCars(DEFAULT_SPEED, false);
+        initializeSimulator(true);
     }
 
     public synchronized void increaseTraffic() {
@@ -52,11 +52,8 @@ public class TrafficSimulator {
     public synchronized void reset() {
         cars.clear();
         logs.clear();
-        loadDefaultCars();
-        currentState = new FluentTrafficState();
-        refreshRoadStatus();
+        initializeSimulator(false);
         addLog("Simulator reset to the initial fluent state.");
-        updateCars(DEFAULT_SPEED, false);
     }
 
     public synchronized void setState(TrafficState state) {
@@ -108,6 +105,17 @@ public class TrafficSimulator {
 
         if (logs.size() > MAX_LOG_ENTRIES) {
             logs.remove(0);
+        }
+    }
+
+    private void initializeSimulator(boolean addInitializationLog) {
+        loadDefaultCars();
+        currentState = new FluentTrafficState();
+        refreshRoadStatus();
+        updateCars(DEFAULT_SPEED, false);
+
+        if (addInitializationLog) {
+            addLog("Simulator initialized in fluent traffic state.");
         }
     }
 

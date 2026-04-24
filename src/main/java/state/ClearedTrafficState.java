@@ -2,6 +2,9 @@ package state;
 
 import context.TrafficSimulator;
 
+/**
+ * Concrete State representing traffic recovery after congestion or an accident.
+ */
 public class ClearedTrafficState implements TrafficState {
     private static final int RECOVERY_SPEED = 50;
     private static final int LOW_SPEED = 25;

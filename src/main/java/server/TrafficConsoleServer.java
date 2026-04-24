@@ -3,6 +3,9 @@ package server;
 import context.TrafficSimulator;
 import model.RoadStatus;
 
+/**
+ * Console view used to demonstrate the simulator without the web interface.
+ */
 public class TrafficConsoleServer {
     public void printSnapshot(String title, TrafficSimulator simulator) {
         RoadStatus roadStatus = simulator.getRoadStatus();

@@ -2,6 +2,9 @@ package state;
 
 import context.TrafficSimulator;
 
+/**
+ * Concrete State representing normal high-speed traffic flow.
+ */
 public class FluentTrafficState implements TrafficState {
     private static final int HIGH_SPEED = 90;
     private static final int LOW_SPEED = 25;

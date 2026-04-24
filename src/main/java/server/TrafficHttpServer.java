@@ -16,6 +16,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * HTTP adapter that exposes the TrafficSimulator context to the web frontend.
+ * This class only handles transport concerns and delegates business actions to the context.
+ */
 public class TrafficHttpServer {
     private final TrafficSimulator simulator;
     private final HttpServer server;
@@ -29,6 +33,7 @@ public class TrafficHttpServer {
     }
 
     public void start() {
+        server.setExecutor(null);
         server.start();
     }
 

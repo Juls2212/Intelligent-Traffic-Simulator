@@ -2,6 +2,9 @@ package state;
 
 import context.TrafficSimulator;
 
+/**
+ * Concrete State representing slow traffic caused by congestion.
+ */
 public class CongestedTrafficState implements TrafficState {
     private static final int LOW_SPEED = 25;
     private static final int RECOVERY_SPEED = 50;

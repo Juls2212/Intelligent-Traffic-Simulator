@@ -2,6 +2,9 @@ package state;
 
 import context.TrafficSimulator;
 
+/**
+ * Concrete State representing an active accident that blocks traffic flow.
+ */
 public class AccidentTrafficState implements TrafficState {
     private static final int CRITICAL_SPEED = 5;
     private static final int RECOVERY_SPEED = 50;
