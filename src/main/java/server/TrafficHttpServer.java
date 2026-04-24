@@ -6,7 +6,9 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import context.TrafficSimulator;
 import model.Car;
+import model.LaneStatus;
 import model.RoadStatus;
+import model.TrafficLight;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -75,6 +77,9 @@ public class TrafficHttpServer {
         List<Car> cars = simulator.getCars();
         List<String> logs = simulator.getLogs();
         List<String> stateTransitions = simulator.getStateTransitions();
+        List<TrafficLight> trafficLights = simulator.getTrafficLights();
+        List<LaneStatus> laneStatuses = simulator.getLaneStatuses();
+        List<String> decisionLogs = simulator.getDecisionLogs();
 
         StringBuilder builder = new StringBuilder();
         builder.append("{");
@@ -86,8 +91,12 @@ public class TrafficHttpServer {
         builder.append("\"averageSpeed\":").append(status.getAverageSpeed()).append(",");
         builder.append("\"congestionLevel\":\"").append(escapeJson(status.getCongestionLevel())).append("\",");
         builder.append("\"accidentActive\":").append(status.isAccidentActive()).append(",");
+        builder.append("\"blockedLane\":").append(simulator.getBlockedLane()).append(",");
         builder.append("\"cars\":").append(buildCarsJson(cars)).append(",");
+        builder.append("\"trafficLights\":").append(buildTrafficLightsJson(trafficLights)).append(",");
+        builder.append("\"laneStatuses\":").append(buildLaneStatusesJson(laneStatuses)).append(",");
         builder.append("\"logs\":").append(buildLogsJson(logs)).append(",");
+        builder.append("\"decisionLogs\":").append(buildLogsJson(decisionLogs)).append(",");
         builder.append("\"stateTransitions\":").append(buildLogsJson(stateTransitions));
         builder.append("}");
         return builder.toString();
@@ -124,6 +133,51 @@ public class TrafficHttpServer {
             builder.append("\"").append(escapeJson(logs.get(i))).append("\"");
 
             if (i < logs.size() - 1) {
+                builder.append(",");
+            }
+        }
+
+        builder.append("]");
+        return builder.toString();
+    }
+
+    private String buildTrafficLightsJson(List<TrafficLight> trafficLights) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+
+        for (int i = 0; i < trafficLights.size(); i++) {
+            TrafficLight trafficLight = trafficLights.get(i);
+            builder.append("{");
+            builder.append("\"id\":\"").append(escapeJson(trafficLight.getId())).append("\",");
+            builder.append("\"lane\":").append(trafficLight.getLane()).append(",");
+            builder.append("\"color\":\"").append(escapeJson(trafficLight.getColor())).append("\",");
+            builder.append("\"remainingSeconds\":").append(trafficLight.getRemainingSeconds());
+            builder.append("}");
+
+            if (i < trafficLights.size() - 1) {
+                builder.append(",");
+            }
+        }
+
+        builder.append("]");
+        return builder.toString();
+    }
+
+    private String buildLaneStatusesJson(List<LaneStatus> laneStatuses) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+
+        for (int i = 0; i < laneStatuses.size(); i++) {
+            LaneStatus laneStatus = laneStatuses.get(i);
+            builder.append("{");
+            builder.append("\"laneNumber\":").append(laneStatus.getLaneNumber()).append(",");
+            builder.append("\"blocked\":").append(laneStatus.isBlocked()).append(",");
+            builder.append("\"priority\":").append(laneStatus.isPriority()).append(",");
+            builder.append("\"vehicleCount\":").append(laneStatus.getVehicleCount()).append(",");
+            builder.append("\"averageSpeed\":").append(laneStatus.getAverageSpeed());
+            builder.append("}");
+
+            if (i < laneStatuses.size() - 1) {
                 builder.append(",");
             }
         }

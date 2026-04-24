@@ -7,6 +7,13 @@ const CAR_START_OFFSET = 42;
 const roadSceneElement = document.getElementById("road-scene");
 const carsLayerElement = document.getElementById("cars-layer");
 const accidentMarkerElement = document.getElementById("accident-marker");
+const trafficLightsLayerElement = document.getElementById("traffic-lights-layer");
+const blockedLaneBannerElement = document.getElementById("blocked-lane-banner");
+const laneOverlayElements = [
+    document.getElementById("lane-overlay-1"),
+    document.getElementById("lane-overlay-2"),
+    document.getElementById("lane-overlay-3")
+];
 const recoveryBannerElement = document.getElementById("recovery-banner");
 const delegationBannerElement = document.getElementById("delegation-banner");
 const stateHeroCardElement = document.getElementById("state-hero-card");
@@ -27,6 +34,8 @@ const evidenceActionElement = document.getElementById("evidence-action");
 const evidenceResultElement = document.getElementById("evidence-result");
 const transitionPanelElement = document.getElementById("transition-panel");
 const transitionsListElement = document.getElementById("transitions-list");
+const laneStatusesElement = document.getElementById("lane-statuses");
+const decisionLogsElement = document.getElementById("decision-logs");
 const logsListElement = document.getElementById("logs-list");
 const demoMessageElement = document.getElementById("demo-message");
 const actionButtons = Array.from(document.querySelectorAll("[data-action]"));
@@ -104,6 +113,7 @@ function renderStatus(status) {
     roadSceneElement.className = `road-scene ${visualState}`;
     accidentMarkerElement.hidden = status.accidentActive !== true;
     recoveryBannerElement.hidden = status.currentState !== "ClearedTrafficState";
+    renderBlockedLane(status.blockedLane);
 
     applyStateTheme(stateHeroCardElement, `hero-side-card ${themeClass}`);
     applyStateTheme(stateSummaryCardElement, `status-card accent-card ${mapAccentClass(status.currentState)}`);
@@ -126,6 +136,9 @@ function renderStatus(status) {
     evidenceResultElement.textContent = actionTraceParts.result || "Sin resultado registrado";
 
     renderCars(status.cars, status.currentState);
+    renderTrafficLights(status.trafficLights || []);
+    renderLaneStatuses(status.laneStatuses || []);
+    renderDecisionLogs(status.decisionLogs || []);
     renderTransitions(status.stateTransitions || []);
     renderLogs(status.logs || []);
 
@@ -133,6 +146,41 @@ function renderStatus(status) {
         lastRenderedTrace = status.lastActionTrace;
         showDelegationBanner("La accion fue delegada al estado actual", visualState);
     }
+}
+
+function renderTrafficLights(trafficLights) {
+    trafficLightsLayerElement.innerHTML = "";
+
+    trafficLights.forEach((trafficLight) => {
+        const trafficLightElement = document.createElement("div");
+        const topPosition = resolveTrafficLightTop(trafficLight.lane);
+        trafficLightElement.className = `traffic-light traffic-light-${trafficLight.color.toLowerCase()}`;
+        trafficLightElement.style.top = `${topPosition}px`;
+        trafficLightElement.innerHTML = `
+            <div class="traffic-light-body">
+                <span class="traffic-light-dot"></span>
+            </div>
+            <div class="traffic-light-info">
+                <strong>C${trafficLight.lane}</strong>
+                <span>${translateTrafficLightColor(trafficLight.color)}</span>
+                <span>${trafficLight.remainingSeconds}s</span>
+            </div>
+        `;
+        trafficLightsLayerElement.appendChild(trafficLightElement);
+    });
+}
+
+function renderBlockedLane(blockedLane) {
+    const hasBlockedLane = blockedLane > 0;
+    blockedLaneBannerElement.hidden = !hasBlockedLane;
+
+    if (hasBlockedLane) {
+        blockedLaneBannerElement.textContent = `Carril bloqueado: ${blockedLane}`;
+    }
+
+    laneOverlayElements.forEach((laneOverlayElement, index) => {
+        laneOverlayElement.classList.toggle("blocked", blockedLane === index + 1);
+    });
 }
 
 function startPolling(intervalMs) {
@@ -220,6 +268,37 @@ function renderTransitions(transitions) {
     }
 }
 
+function renderLaneStatuses(laneStatuses) {
+    laneStatusesElement.innerHTML = "";
+
+    laneStatuses.forEach((laneStatus) => {
+        const laneCardElement = document.createElement("article");
+        laneCardElement.className = buildLaneCardClassName(laneStatus);
+        laneCardElement.innerHTML = `
+            <h3>Carril ${laneStatus.laneNumber}</h3>
+            <p>Vehiculos: ${laneStatus.vehicleCount}</p>
+            <p>Velocidad promedio: ${laneStatus.averageSpeed} km/h</p>
+            <p>Prioridad: ${laneStatus.priority ? "Alta" : "Normal"}</p>
+            <p>Estado: ${laneStatus.blocked ? "Bloqueado" : "Libre"}</p>
+        `;
+        laneStatusesElement.appendChild(laneCardElement);
+    });
+}
+
+function renderDecisionLogs(decisionLogs) {
+    decisionLogsElement.innerHTML = "";
+
+    const visibleDecisions = decisionLogs.length > 0
+        ? decisionLogs.slice().reverse()
+        : ["No hay decisiones registradas todavia."];
+
+    visibleDecisions.forEach((decisionLog) => {
+        const decisionItem = document.createElement("li");
+        decisionItem.textContent = translateDecisionLog(decisionLog);
+        decisionLogsElement.appendChild(decisionItem);
+    });
+}
+
 function renderLogs(logs) {
     logsListElement.innerHTML = "";
 
@@ -256,6 +335,16 @@ function resolveLaneTop(lane) {
     };
 
     return laneMap[lane] || 78;
+}
+
+function resolveTrafficLightTop(lane) {
+    const laneMap = {
+        1: 44,
+        2: 156,
+        3: 268
+    };
+
+    return laneMap[lane] || 44;
 }
 
 function mapRoadStateClass(currentState) {
@@ -319,6 +408,20 @@ function parseActionTrace(trace) {
         handledBy: stateAndResult[0] || "",
         result: translateResult(stateAndResult[1] || "")
     };
+}
+
+function buildLaneCardClassName(laneStatus) {
+    const classNames = ["lane-card"];
+
+    if (laneStatus.priority) {
+        classNames.push("priority");
+    }
+
+    if (laneStatus.blocked) {
+        classNames.push("blocked");
+    }
+
+    return classNames.join(" ");
 }
 
 function translateActionName(action) {
@@ -447,6 +550,33 @@ function translateCongestionLevel(congestionLevel) {
     };
 
     return levels[congestionLevel] || congestionLevel;
+}
+
+function translateTrafficLightColor(color) {
+    const colorLabels = {
+        GREEN: "Verde",
+        YELLOW: "Amarillo",
+        RED: "Rojo"
+    };
+
+    return colorLabels[color] || color;
+}
+
+function translateDecisionLog(decisionLog) {
+    return decisionLog
+        .replace("gave priority to lane ", "dio prioridad al carril ")
+        .replace("blocked lane ", "bloqueo el carril ")
+        .replace("and redirected vehicles.", "y redirigio vehiculos.")
+        .replace("and reduced speed.", "y redujo la velocidad.")
+        .replace("restored normal circulation.", "restauro la circulacion normal.")
+        .replace("maintained normal circulation.", "mantuvo la circulacion normal.")
+        .replace("confirmed that all lanes were already available.", "confirmo que todos los carriles ya estaban disponibles.")
+        .replace("maintained adaptive congestion priority on lane ", "mantuvo prioridad adaptativa de congestion en el carril ")
+        .replace("kept lane ", "mantuvo el carril ")
+        .replace(" blocked while emergency flow control remained active.", " bloqueado mientras el control de emergencia seguia activo.")
+        .replace("confirmed that lane ", "confirmo que el carril ")
+        .replace(" remains blocked.", " sigue bloqueado.")
+        .replace("kept recovery controls active.", "mantuvo activos los controles de recuperacion.");
 }
 
 function translateLog(log) {

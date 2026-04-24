@@ -6,40 +6,56 @@ import context.TrafficSimulator;
  * Concrete State representing normal high-speed traffic flow.
  */
 public class FluentTrafficState implements TrafficState {
-    private static final int HIGH_SPEED = 90;
-    private static final int LOW_SPEED = 25;
-    private static final int CRITICAL_SPEED = 5;
-
     @Override
     public void increaseTraffic(TrafficSimulator simulator) {
         // Concrete State decides how the Context reacts to the same request.
         simulator.recordStateHandling("increaseTraffic", "FluentTrafficState", "Transition to CongestedTrafficState");
         simulator.setState(new CongestedTrafficState());
-        simulator.updateCars(LOW_SPEED, false);
+        int priorityLane = simulator.findLaneWithHighestVehicleCount();
+        simulator.enableAllLanes();
+        simulator.assignPriorityLane(priorityLane);
+        simulator.prioritizeTrafficLightForLane(priorityLane);
+        simulator.addDecisionLog("CongestedTrafficState gave priority to lane " + priorityLane + ".");
+        simulator.updateCars(simulator.getModerateSpeed(), false);
     }
 
     @Override
     public void reduceTraffic(TrafficSimulator simulator) {
         simulator.recordStateHandling("reduceTraffic", "FluentTrafficState", "Remains in FluentTrafficState");
-        simulator.updateCars(HIGH_SPEED, false);
+        simulator.enableAllLanes();
+        simulator.clearLanePriorities();
+        simulator.restoreNormalTrafficLights();
+        simulator.addDecisionLog("FluentTrafficState maintained normal circulation.");
+        simulator.updateCars(simulator.getDefaultSpeed(), false);
     }
 
     @Override
     public void reportAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("reportAccident", "FluentTrafficState", "Transition to AccidentTrafficState");
         simulator.setState(new AccidentTrafficState());
-        simulator.updateCars(CRITICAL_SPEED, true);
+        simulator.blockLane(2);
+        simulator.clearLanePriorities();
+        simulator.restrictBlockedLaneTrafficLight(2);
+        simulator.addDecisionLog("AccidentTrafficState blocked lane 2 and redirected vehicles.");
+        simulator.updateCars(simulator.getCriticalSpeed(), true);
     }
 
     @Override
     public void clearAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("clearAccident", "FluentTrafficState", "Remains in FluentTrafficState");
+        simulator.enableAllLanes();
+        simulator.restoreNormalTrafficLights();
+        simulator.addDecisionLog("FluentTrafficState confirmed that all lanes were already available.");
     }
 
     @Override
     public void advanceSimulation(TrafficSimulator simulator) {
         simulator.recordStateHandling("advanceSimulation", "FluentTrafficState", "Remains in FluentTrafficState");
-        simulator.updateCars(HIGH_SPEED, false);
+        simulator.enableAllLanes();
+        simulator.clearLanePriorities();
+        simulator.restoreNormalTrafficLights();
+        simulator.addDecisionLog("FluentTrafficState maintained normal circulation.");
+        simulator.updateCars(simulator.getDefaultSpeed(), false);
     }
 
     @Override

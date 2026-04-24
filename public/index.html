@@ -44,6 +44,11 @@
 
             <div id="road-scene" class="road-scene state-fluent">
                 <div class="road-glow"></div>
+                <div class="lane-overlays">
+                    <div id="lane-overlay-1" class="lane-overlay"></div>
+                    <div id="lane-overlay-2" class="lane-overlay"></div>
+                    <div id="lane-overlay-3" class="lane-overlay"></div>
+                </div>
                 <div class="lane-markers">
                     <span class="lane-marker lane-marker-1"></span>
                     <span class="lane-marker lane-marker-2"></span>
@@ -53,6 +58,10 @@
                     <span>Carril 2</span>
                     <span>Carril 3</span>
                 </div>
+                <div id="blocked-lane-banner" class="blocked-lane-banner" hidden>
+                    Carril bloqueado
+                </div>
+                <div id="traffic-lights-layer" class="traffic-lights-layer"></div>
                 <div id="accident-marker" class="accident-marker" hidden>
                     <span class="accident-icon">!</span>
                     <span class="accident-text">Accidente</span>
@@ -173,6 +182,9 @@
                 <li>Cada estado decide como responder a las mismas acciones.</li>
                 <li>El mismo metodo produce distintos resultados segun el estado actual del objeto.</li>
             </ul>
+            <p class="explanation-note">
+                Cada estado no solo cambia el texto del sistema, tambien modifica semaforos, carriles, velocidades y decisiones del simulador.
+            </p>
         </article>
 
         <article id="transition-panel" class="panel transition-panel">
@@ -184,6 +196,28 @@
             </div>
 
             <ul id="transitions-list" class="transition-list"></ul>
+        </article>
+
+        <article class="panel lane-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Operacion por carril</p>
+                    <h2>Estado de carriles</h2>
+                </div>
+            </div>
+
+            <div id="lane-statuses" class="lane-status-grid"></div>
+        </article>
+
+        <article class="panel decisions-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">Control adaptativo</p>
+                    <h2>Decisiones del sistema inteligente</h2>
+                </div>
+            </div>
+
+            <ul id="decision-logs" class="decision-list"></ul>
         </article>
 
         <article class="panel logs-panel">

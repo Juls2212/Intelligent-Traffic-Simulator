@@ -6,37 +6,54 @@ import context.TrafficSimulator;
  * Concrete State representing an active accident that blocks traffic flow.
  */
 public class AccidentTrafficState implements TrafficState {
-    private static final int CRITICAL_SPEED = 5;
-    private static final int RECOVERY_SPEED = 50;
-
     @Override
     public void increaseTraffic(TrafficSimulator simulator) {
         simulator.recordStateHandling("increaseTraffic", "AccidentTrafficState", "Remains in AccidentTrafficState");
-        simulator.updateCars(CRITICAL_SPEED, true);
+        int accidentLane = simulator.getBlockedLane() > 0 ? simulator.getBlockedLane() : 2;
+        simulator.blockLane(accidentLane);
+        simulator.restrictBlockedLaneTrafficLight(accidentLane);
+        simulator.addDecisionLog("AccidentTrafficState blocked lane " + accidentLane + " and reduced speed.");
+        simulator.updateCars(simulator.getCriticalSpeed(), true);
     }
 
     @Override
     public void reduceTraffic(TrafficSimulator simulator) {
         simulator.recordStateHandling("reduceTraffic", "AccidentTrafficState", "Remains in AccidentTrafficState");
-        simulator.updateCars(CRITICAL_SPEED, true);
+        int accidentLane = simulator.getBlockedLane() > 0 ? simulator.getBlockedLane() : 2;
+        simulator.blockLane(accidentLane);
+        simulator.restrictBlockedLaneTrafficLight(accidentLane);
+        simulator.addDecisionLog("AccidentTrafficState kept lane " + accidentLane + " blocked while emergency flow control remained active.");
+        simulator.updateCars(simulator.getCriticalSpeed(), true);
     }
 
     @Override
     public void reportAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("reportAccident", "AccidentTrafficState", "Remains in AccidentTrafficState");
+        int accidentLane = simulator.getBlockedLane() > 0 ? simulator.getBlockedLane() : 2;
+        simulator.blockLane(accidentLane);
+        simulator.restrictBlockedLaneTrafficLight(accidentLane);
+        simulator.addDecisionLog("AccidentTrafficState confirmed that lane " + accidentLane + " remains blocked.");
     }
 
     @Override
     public void clearAccident(TrafficSimulator simulator) {
         simulator.recordStateHandling("clearAccident", "AccidentTrafficState", "Transition to ClearedTrafficState");
         simulator.setState(new ClearedTrafficState());
-        simulator.updateCars(RECOVERY_SPEED, false);
+        simulator.enableAllLanes();
+        simulator.clearLanePriorities();
+        simulator.restoreRecoveryTrafficLights();
+        simulator.addDecisionLog("ClearedTrafficState restored normal circulation.");
+        simulator.updateCars(simulator.getRecoverySpeed(), false);
     }
 
     @Override
     public void advanceSimulation(TrafficSimulator simulator) {
         simulator.recordStateHandling("advanceSimulation", "AccidentTrafficState", "Remains in AccidentTrafficState");
-        simulator.updateCars(CRITICAL_SPEED, true);
+        int accidentLane = simulator.getBlockedLane() > 0 ? simulator.getBlockedLane() : 2;
+        simulator.blockLane(accidentLane);
+        simulator.restrictBlockedLaneTrafficLight(accidentLane);
+        simulator.addDecisionLog("AccidentTrafficState blocked lane " + accidentLane + " and redirected vehicles.");
+        simulator.updateCars(simulator.getCriticalSpeed(), true);
     }
 
     @Override
