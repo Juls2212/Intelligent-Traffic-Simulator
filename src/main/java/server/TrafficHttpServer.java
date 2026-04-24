@@ -53,6 +53,7 @@ public class TrafficHttpServer {
         server.createContext("/api/clear-accident", createActionHandler(() -> simulator.clearAccident()));
         server.createContext("/api/advance", createActionHandler(() -> simulator.advanceSimulation()));
         server.createContext("/api/reset", createActionHandler(() -> simulator.reset()));
+        server.createContext("/api/demo", createActionHandler(() -> simulator.runDemoSequence()));
         server.createContext("/", new StaticFileHandler());
     }
 

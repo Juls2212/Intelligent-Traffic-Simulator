@@ -1,4 +1,5 @@
-const POLL_INTERVAL_MS = 2500;
+const DEFAULT_POLL_INTERVAL_MS = 2500;
+const DEMO_POLL_INTERVAL_MS = 1000;
 const POSITION_SCALE = 1.6;
 
 const roadSceneElement = document.getElementById("road-scene");
@@ -22,18 +23,24 @@ const evidenceStateElement = document.getElementById("evidence-state");
 const evidenceClassElement = document.getElementById("evidence-class");
 const evidenceActionElement = document.getElementById("evidence-action");
 const evidenceResultElement = document.getElementById("evidence-result");
+const transitionPanelElement = document.getElementById("transition-panel");
 const transitionsListElement = document.getElementById("transitions-list");
 const logsListElement = document.getElementById("logs-list");
+const demoMessageElement = document.getElementById("demo-message");
 const actionButtons = Array.from(document.querySelectorAll("[data-action]"));
 
 let pollTimerId = null;
 let lastRenderedTrace = "";
+let lastRenderedTransition = "";
 let delegationTimerId = null;
+let transitionHighlightTimerId = null;
+let demoMessageTimerId = null;
+let currentPollIntervalMs = DEFAULT_POLL_INTERVAL_MS;
 
 document.addEventListener("DOMContentLoaded", () => {
     bindActions();
     refreshStatus();
-    pollTimerId = window.setInterval(refreshStatus, POLL_INTERVAL_MS);
+    startPolling(DEFAULT_POLL_INTERVAL_MS);
 });
 
 function bindActions() {
@@ -44,6 +51,12 @@ function bindActions() {
 
             try {
                 const status = await postAction(button.dataset.action);
+
+                if (button.dataset.action === "/api/demo") {
+                    startPolling(DEMO_POLL_INTERVAL_MS);
+                    showDemoMessage();
+                }
+
                 renderStatus(status);
             } catch (error) {
                 showLoadError("No fue posible actualizar la simulacion.");
@@ -118,6 +131,16 @@ function renderStatus(status) {
     }
 }
 
+function startPolling(intervalMs) {
+    currentPollIntervalMs = intervalMs;
+
+    if (pollTimerId) {
+        window.clearInterval(pollTimerId);
+    }
+
+    pollTimerId = window.setInterval(refreshStatus, currentPollIntervalMs);
+}
+
 function renderCars(cars, currentState) {
     carsLayerElement.innerHTML = "";
     const sceneWidth = carsLayerElement.clientWidth || roadSceneElement.clientWidth || 900;
@@ -154,6 +177,13 @@ function renderTransitions(transitions) {
         item.textContent = transition.replace("->", " \u2192 ");
         transitionsListElement.appendChild(item);
     });
+
+    const latestTransition = transitions.length > 0 ? transitions[transitions.length - 1] : "";
+
+    if (latestTransition && latestTransition !== lastRenderedTransition) {
+        lastRenderedTransition = latestTransition;
+        highlightTransitions();
+    }
 }
 
 function renderLogs(logs) {
@@ -298,6 +328,30 @@ function showDelegationBanner(message, stateClassName) {
     }, 1700);
 }
 
+function showDemoMessage() {
+    demoMessageElement.hidden = false;
+
+    if (demoMessageTimerId) {
+        window.clearTimeout(demoMessageTimerId);
+    }
+
+    demoMessageTimerId = window.setTimeout(() => {
+        demoMessageElement.hidden = true;
+    }, 8000);
+}
+
+function highlightTransitions() {
+    transitionPanelElement.classList.add("highlight");
+
+    if (transitionHighlightTimerId) {
+        window.clearTimeout(transitionHighlightTimerId);
+    }
+
+    transitionHighlightTimerId = window.setTimeout(() => {
+        transitionPanelElement.classList.remove("highlight");
+    }, 1300);
+}
+
 function extractStateClass(stateClassName) {
     if (stateClassName.includes("state-congested")) {
         return "state-congested";
@@ -388,7 +442,10 @@ function translateLog(log) {
         "A new accident was reported during recovery.": "Se reporto un nuevo accidente durante la recuperacion.",
         "The road is already being cleared and recovered.": "La via ya esta siendo despejada y recuperada.",
         "Simulation advanced in recovery mode. Traffic returns to fluent conditions.": "La simulacion avanzo en recuperacion. El trafico vuelve a condiciones fluidas.",
-        "State changed to FluentTrafficState.": "El estado cambio a FluentTrafficState."
+        "State changed to FluentTrafficState.": "El estado cambio a FluentTrafficState.",
+        "Demo sequence started to demonstrate the State pattern.": "Se inicio la secuencia automatica para demostrar el patron State.",
+        "Demo sequence is already running.": "La secuencia automatica ya se encuentra en ejecucion.",
+        "Demo sequence finished.": "La secuencia automatica finalizo."
     };
 
     return translations[log] || log;

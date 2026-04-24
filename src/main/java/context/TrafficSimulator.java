@@ -16,6 +16,7 @@ import java.util.List;
 public class TrafficSimulator {
     private static final int DEFAULT_SPEED = 90;
     private static final int MAX_LOG_ENTRIES = 20;
+    private static final long DEMO_STEP_DELAY_MS = 1200;
 
     private TrafficState currentState;
     private final List<Car> cars;
@@ -23,12 +24,14 @@ public class TrafficSimulator {
     private final List<String> logs;
     private final List<String> stateTransitions;
     private String lastActionTrace;
+    private boolean demoRunning;
 
     public TrafficSimulator() {
         this.cars = new ArrayList<>();
         this.logs = new ArrayList<>();
         this.stateTransitions = new ArrayList<>();
         this.lastActionTrace = "No action has been handled yet.";
+        this.demoRunning = false;
         this.roadStatus = new RoadStatus("", "", "", "", lastActionTrace, 0, "", false);
         initializeSimulator(true);
     }
@@ -60,6 +63,38 @@ public class TrafficSimulator {
         lastActionTrace = "Action: reset handled by TrafficSimulator \u2192 Transition to FluentTrafficState";
         initializeSimulator(false);
         addLog("Simulator reset to the initial fluent state.");
+    }
+
+    public synchronized void runDemoSequence() {
+        if (demoRunning) {
+            addLog("Demo sequence is already running.");
+            return;
+        }
+
+        demoRunning = true;
+        addLog("Demo sequence started to demonstrate the State pattern.");
+
+        Thread demoThread = new Thread(() -> {
+            try {
+                increaseTraffic();
+                pauseDemoStep();
+                reportAccident();
+                pauseDemoStep();
+                clearAccident();
+                pauseDemoStep();
+                reduceTraffic();
+                pauseDemoStep();
+                advanceSimulation();
+            } finally {
+                synchronized (TrafficSimulator.this) {
+                    demoRunning = false;
+                    addLog("Demo sequence finished.");
+                }
+            }
+        }, "traffic-demo-sequence");
+
+        demoThread.setDaemon(true);
+        demoThread.start();
     }
 
     public synchronized void setState(TrafficState state) {
@@ -133,6 +168,14 @@ public class TrafficSimulator {
 
     public synchronized void logStateTransition(String from, String to) {
         stateTransitions.add(from + " -> " + to);
+    }
+
+    private void pauseDemoStep() {
+        try {
+            Thread.sleep(DEMO_STEP_DELAY_MS);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void initializeSimulator(boolean addInitializationLog) {

@@ -121,7 +121,12 @@
                 <button class="action-button" data-action="/api/report-accident">Reportar accidente</button>
                 <button class="action-button" data-action="/api/clear-accident">Despejar accidente</button>
                 <button class="action-button" data-action="/api/advance">Avanzar simulacion</button>
+                <button class="action-button demo-button" data-action="/api/demo">Modo demostracion</button>
                 <button class="action-button secondary-button" data-action="/api/reset">Reiniciar simulador</button>
+            </div>
+
+            <div id="demo-message" class="demo-message" hidden>
+                Ejecutando secuencia automatica para demostrar el patron State
             </div>
         </article>
 
@@ -170,7 +175,7 @@
             </ul>
         </article>
 
-        <article class="panel transition-panel">
+        <article id="transition-panel" class="panel transition-panel">
             <div class="panel-heading">
                 <div>
                     <p class="section-kicker">Trazabilidad del patron</p>
