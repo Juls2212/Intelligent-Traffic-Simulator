@@ -29,27 +29,27 @@ public class TrafficSimulator {
         updateCars(DEFAULT_SPEED, false);
     }
 
-    public void increaseTraffic() {
+    public synchronized void increaseTraffic() {
         currentState.increaseTraffic(this);
     }
 
-    public void reduceTraffic() {
+    public synchronized void reduceTraffic() {
         currentState.reduceTraffic(this);
     }
 
-    public void reportAccident() {
+    public synchronized void reportAccident() {
         currentState.reportAccident(this);
     }
 
-    public void clearAccident() {
+    public synchronized void clearAccident() {
         currentState.clearAccident(this);
     }
 
-    public void advanceSimulation() {
+    public synchronized void advanceSimulation() {
         currentState.advanceSimulation(this);
     }
 
-    public void reset() {
+    public synchronized void reset() {
         cars.clear();
         logs.clear();
         loadDefaultCars();
@@ -59,13 +59,13 @@ public class TrafficSimulator {
         updateCars(DEFAULT_SPEED, false);
     }
 
-    public void setState(TrafficState state) {
+    public synchronized void setState(TrafficState state) {
         this.currentState = state;
         refreshRoadStatus();
         addLog("State changed to " + state.getStateName() + ".");
     }
 
-    public void updateCars(int speed, boolean blocked) {
+    public synchronized void updateCars(int speed, boolean blocked) {
         for (Car car : cars) {
             car.setSpeed(speed);
             car.setBlocked(blocked);
@@ -80,23 +80,30 @@ public class TrafficSimulator {
         roadStatus.setCongestionLevel(resolveCongestionLevel(speed, blocked));
     }
 
-    public List<Car> getCars() {
-        return Collections.unmodifiableList(cars);
+    public synchronized List<Car> getCars() {
+        return Collections.unmodifiableList(new ArrayList<>(cars));
     }
 
-    public RoadStatus getRoadStatus() {
-        return roadStatus;
+    public synchronized RoadStatus getRoadStatus() {
+        return new RoadStatus(
+                roadStatus.getStateName(),
+                roadStatus.getSpanishStateName(),
+                roadStatus.getDescription(),
+                roadStatus.getAverageSpeed(),
+                roadStatus.getCongestionLevel(),
+                roadStatus.isAccidentActive()
+        );
     }
 
-    public List<String> getLogs() {
-        return Collections.unmodifiableList(logs);
+    public synchronized List<String> getLogs() {
+        return Collections.unmodifiableList(new ArrayList<>(logs));
     }
 
-    public TrafficState getCurrentState() {
+    public synchronized TrafficState getCurrentState() {
         return currentState;
     }
 
-    public void addLog(String message) {
+    public synchronized void addLog(String message) {
         logs.add(message);
 
         if (logs.size() > MAX_LOG_ENTRIES) {

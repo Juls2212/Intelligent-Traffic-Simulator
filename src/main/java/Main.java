@@ -1,27 +1,11 @@
 import context.TrafficSimulator;
-import model.RoadStatus;
-import server.TrafficConsoleServer;
+import server.TrafficHttpServer;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         TrafficSimulator simulator = new TrafficSimulator();
-        TrafficConsoleServer consoleServer = new TrafficConsoleServer();
-
-        consoleServer.printSnapshot("Estado inicial", simulator);
-
-        simulator.increaseTraffic();
-        consoleServer.printSnapshot("Despues de increaseTraffic()", simulator);
-
-        simulator.reportAccident();
-        consoleServer.printSnapshot("Despues de reportAccident()", simulator);
-
-        simulator.reduceTraffic();
-        consoleServer.printSnapshot("Despues de reduceTraffic()", simulator);
-
-        simulator.clearAccident();
-        consoleServer.printSnapshot("Despues de clearAccident()", simulator);
-
-        simulator.advanceSimulation();
-        consoleServer.printSnapshot("Despues de advanceSimulation()", simulator);
+        TrafficHttpServer server = new TrafficHttpServer(simulator, 8080);
+        server.start();
+        System.out.println("Server running at http://localhost:8080");
     }
 }

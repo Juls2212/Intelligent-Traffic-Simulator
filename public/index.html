@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Inteligente de Trafico</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="layout">
+    <section class="hero">
+        <p class="eyebrow">Patron State</p>
+        <h1>Simulador Inteligente de Trafico</h1>
+        <p class="hero-text">
+            Controla el estado del trafico y observa como cambia el comportamiento del sistema sin usar
+            condicionales en el contexto.
+        </p>
+    </section>
+
+    <section class="panel panel-status">
+        <h2>Estado actual</h2>
+        <div class="status-grid">
+            <article class="status-card">
+                <span class="label">Estado</span>
+                <strong id="state-name">Cargando...</strong>
+            </article>
+            <article class="status-card">
+                <span class="label">Clase</span>
+                <strong id="state-class">-</strong>
+            </article>
+            <article class="status-card">
+                <span class="label">Velocidad promedio</span>
+                <strong id="average-speed">-</strong>
+            </article>
+            <article class="status-card">
+                <span class="label">Congestion</span>
+                <strong id="congestion-level">-</strong>
+            </article>
+            <article class="status-card">
+                <span class="label">Accidente</span>
+                <strong id="accident-active">-</strong>
+            </article>
+        </div>
+        <p id="state-description" class="description"></p>
+    </section>
+
+    <section class="panel panel-actions">
+        <h2>Controles de simulacion</h2>
+        <div class="actions">
+            <button data-action="/api/increase-traffic">Aumentar trafico</button>
+            <button data-action="/api/reduce-traffic">Reducir trafico</button>
+            <button data-action="/api/report-accident">Reportar accidente</button>
+            <button data-action="/api/clear-accident">Despejar accidente</button>
+            <button data-action="/api/advance">Avanzar simulacion</button>
+            <button data-action="/api/reset" class="secondary">Reiniciar</button>
+        </div>
+    </section>
+
+    <section class="panel panel-road">
+        <h2>Vehiculos</h2>
+        <div id="cars-container" class="cars-grid"></div>
+    </section>
+
+    <section class="panel panel-logs">
+        <h2>Eventos recientes</h2>
+        <ul id="logs-list" class="logs-list"></ul>
+    </section>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>
