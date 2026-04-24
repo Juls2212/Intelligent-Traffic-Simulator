@@ -12,37 +12,33 @@ public class FluentTrafficState implements TrafficState {
 
     @Override
     public void increaseTraffic(TrafficSimulator simulator) {
-        simulator.setLastActionTrace("Action: increaseTraffic handled by FluentTrafficState \u2192 Transition to CongestedTrafficState");
-        simulator.addLog("Traffic volume increased. The road is now becoming congested.");
+        // Concrete State decides how the Context reacts to the same request.
+        simulator.recordStateHandling("increaseTraffic", "FluentTrafficState", "Transition to CongestedTrafficState");
         simulator.setState(new CongestedTrafficState());
         simulator.updateCars(LOW_SPEED, false);
     }
 
     @Override
     public void reduceTraffic(TrafficSimulator simulator) {
-        simulator.setLastActionTrace("Action: reduceTraffic handled by FluentTrafficState \u2192 Remains in FluentTrafficState");
-        simulator.addLog("Traffic reduction requested, but traffic is already fluent.");
+        simulator.recordStateHandling("reduceTraffic", "FluentTrafficState", "Remains in FluentTrafficState");
         simulator.updateCars(HIGH_SPEED, false);
     }
 
     @Override
     public void reportAccident(TrafficSimulator simulator) {
-        simulator.setLastActionTrace("Action: reportAccident handled by FluentTrafficState \u2192 Transition to AccidentTrafficState");
-        simulator.addLog("An accident was reported. Traffic flow switches to accident mode.");
+        simulator.recordStateHandling("reportAccident", "FluentTrafficState", "Transition to AccidentTrafficState");
         simulator.setState(new AccidentTrafficState());
         simulator.updateCars(CRITICAL_SPEED, true);
     }
 
     @Override
     public void clearAccident(TrafficSimulator simulator) {
-        simulator.setLastActionTrace("Action: clearAccident handled by FluentTrafficState \u2192 Remains in FluentTrafficState");
-        simulator.addLog("No active accident exists to clear.");
+        simulator.recordStateHandling("clearAccident", "FluentTrafficState", "Remains in FluentTrafficState");
     }
 
     @Override
     public void advanceSimulation(TrafficSimulator simulator) {
-        simulator.setLastActionTrace("Action: advanceSimulation handled by FluentTrafficState \u2192 Remains in FluentTrafficState");
-        simulator.addLog("Simulation advanced with high-speed traffic flow.");
+        simulator.recordStateHandling("advanceSimulation", "FluentTrafficState", "Remains in FluentTrafficState");
         simulator.updateCars(HIGH_SPEED, false);
     }
 

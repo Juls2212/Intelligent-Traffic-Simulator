@@ -1,6 +1,10 @@
 import context.TrafficSimulator;
 import server.TrafficHttpServer;
 
+/**
+ * Application entry point.
+ * It only wires the Context to the HTTP adapter.
+ */
 public class Main {
     public static void main(String[] args) throws Exception {
         TrafficSimulator simulator = new TrafficSimulator();

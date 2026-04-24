@@ -62,46 +62,53 @@ public class TrafficConsoleServer {
     }
 
     private String translateLog(String log) {
-        if ("Simulator initialized in fluent traffic state.".equals(log)) {
-            return "El simulador se inicializo en estado de trafico fluido.";
+        if ("TrafficSimulator initialized the Context with FluentTrafficState as the starting State object.".equals(log)) {
+            return "TrafficSimulator inicializo el Contexto con FluentTrafficState como objeto State inicial.";
         }
 
-        if ("Traffic volume increased. The road is now becoming congested.".equals(log)) {
-            return "El volumen de trafico aumento. La via comienza a congestionarse.";
+        if ("TrafficSimulator reset the simulation and restored FluentTrafficState as the initial academic baseline.".equals(log)) {
+            return "TrafficSimulator reinicio la simulacion y restauro FluentTrafficState como linea base academica inicial.";
         }
 
-        if ("State changed to CongestedTrafficState.".equals(log)) {
-            return "El estado cambio a CongestedTrafficState.";
+        if ("TrafficSimulator started the automatic demonstration sequence to expose dynamic State-pattern behavior.".equals(log)) {
+            return "TrafficSimulator inicio la secuencia automatica para exponer el comportamiento dinamico del patron State.";
         }
 
-        if ("An accident occurred during congestion. Traffic switches to accident mode.".equals(log)) {
-            return "Ocurrio un accidente durante la congestion. El trafico cambia al modo de accidente.";
+        if ("TrafficSimulator rejected a new demo request because the previous demonstration sequence is still running.".equals(log)) {
+            return "TrafficSimulator rechazo una nueva solicitud de demostracion porque la secuencia anterior sigue en ejecucion.";
         }
 
-        if ("State changed to AccidentTrafficState.".equals(log)) {
-            return "El estado cambio a AccidentTrafficState.";
+        if ("TrafficSimulator finished the automatic demonstration sequence.".equals(log)) {
+            return "TrafficSimulator finalizo la secuencia automatica de demostracion.";
         }
 
-        if ("Reducing traffic volume does not solve the active accident.".equals(log)) {
-            return "Reducir el volumen de trafico no resuelve el accidente activo.";
+        if (log.startsWith("TrafficSimulator delegated ")) {
+            return translateDelegationLog(log);
         }
 
-        if ("Emergency response cleared the accident. The road moves into recovery.".equals(log)) {
-            return "La emergencia despejo el accidente. La via entra en recuperacion.";
+        if (log.startsWith("TrafficSimulator updated its active state reference to ")) {
+            return log
+                    .replace("TrafficSimulator updated its active state reference to ", "TrafficSimulator actualizo su referencia de estado activo a ")
+                    .replace(".", ".");
         }
 
-        if ("State changed to ClearedTrafficState.".equals(log)) {
-            return "El estado cambio a ClearedTrafficState.";
-        }
-
-        if ("Simulation advanced in recovery mode. Traffic returns to fluent conditions.".equals(log)) {
-            return "La simulacion avanzo en modo de recuperacion. El trafico vuelve a condiciones fluidas.";
-        }
-
-        if ("State changed to FluentTrafficState.".equals(log)) {
-            return "El estado cambio a FluentTrafficState.";
+        if (log.startsWith("State changed to ")) {
+            return log.replace("State changed to ", "El estado cambio a ");
         }
 
         return log;
+    }
+
+    private String translateDelegationLog(String log) {
+        String translated = log
+                .replace("TrafficSimulator delegated ", "TrafficSimulator delego ")
+                .replace(", which transitioned to ", ", y este realizo una transicion a ")
+                .replace(", which remained in ", ", y este permanecio en ");
+
+        if (translated.endsWith(".")) {
+            return translated;
+        }
+
+        return translated + ".";
     }
 }

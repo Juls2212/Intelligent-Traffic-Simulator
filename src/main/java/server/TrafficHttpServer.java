@@ -18,7 +18,8 @@ import java.util.List;
 
 /**
  * HTTP adapter that exposes the TrafficSimulator context to the web frontend.
- * This class only handles transport concerns and delegates business actions to the context.
+ * This class only handles transport concerns and delegates business actions to the Context.
+ * No State-specific decision is implemented here.
  */
 public class TrafficHttpServer {
     private final TrafficSimulator simulator;

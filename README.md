@@ -1,42 +1,23 @@
-# Simulador de Tráfico Inteligente
+# Simulador de Trafico Inteligente
 
 ## Nombre del proyecto
-Simulador de Tráfico Inteligente con Patrón State.
+Simulador de Trafico Inteligente con Patron State.
 
 ## Objetivo
-Demostrar de forma clara y académica cómo el patrón de diseño State permite que un mismo simulador cambie su comportamiento según el estado actual del tráfico, sin usar grandes bloques `if` o `switch` para decidir la lógica principal.
+Demostrar de forma clara, defendible y academica como el Patron State permite que un mismo simulador responda de manera distinta a las mismas acciones segun el estado actual del trafico.
 
 ## Caso de estudio
-El proyecto modela una vía urbana con vehículos que cambian su velocidad y comportamiento ante diferentes situaciones:
+El proyecto modela una via urbana con vehiculos que atraviesan cuatro situaciones operativas:
 
-- Tráfico fluido
-- Tráfico congestionado
+- Trafico fluido
+- Trafico congestionado
 - Accidente activo
-- Vía despejada en recuperación
+- Via despejada en recuperacion
 
-El usuario puede interactuar con el sistema desde una aplicación web y observar cómo el backend responde de manera distinta a las mismas acciones dependiendo del estado actual.
+La aplicacion web permite ejecutar acciones sobre el simulador y observar, en tiempo real, como cambia el comportamiento del sistema cuando cambia el objeto State activo.
 
-## Por qué aplica el Patrón State
-Este caso encaja con el patrón State porque el simulador debe responder a las mismas operaciones, pero con efectos diferentes según la condición actual de la vía.
-
-Por ejemplo:
-
-- `increaseTraffic()` no se comporta igual si el tráfico está fluido que si ya existe congestión.
-- `clearAccident()` no significa lo mismo si hay un accidente activo o si la vía ya está en recuperación.
-- `advanceSimulation()` produce una evolución distinta en cada estado.
-
-En lugar de centralizar todas esas decisiones en el contexto con condicionales extensos, cada estado concreto encapsula su propia lógica y decide cuándo cambiar al siguiente estado.
-
-## Clases principales del patrón
-### Contexto
-`TrafficSimulator`
-
-Es la clase que mantiene una referencia al estado actual (`TrafficState`), almacena los vehículos, el estado de la vía y los registros recientes. Además, delega las acciones al objeto `currentState`.
-
-### Interfaz State
-`TrafficState`
-
-Define las operaciones comunes que todos los estados deben implementar:
+## Por que aplica el Patron State
+Este problema es apropiado para el Patron State porque el sistema expone siempre las mismas operaciones:
 
 - `increaseTraffic()`
 - `reduceTraffic()`
@@ -44,101 +25,129 @@ Define las operaciones comunes que todos los estados deben implementar:
 - `clearAccident()`
 - `advanceSimulation()`
 
+Sin embargo, esas operaciones no significan lo mismo en todos los momentos. El resultado depende del estado actual del objeto `TrafficSimulator`. Por esa razon, la logica no se concentra en grandes bloques `if` o `switch` dentro del contexto, sino que se distribuye en objetos State concretos.
+
+## Evidencia del Patron State
+### Contexto
+`TrafficSimulator`
+
+Es el Contexto del patron. Mantiene una referencia al estado actual, conserva los vehiculos, el estado de la via, los registros de eventos, el historial de transiciones y la traza de la ultima accion. Su responsabilidad principal es delegar las operaciones al objeto `currentState`.
+
+### Interfaz State
+`TrafficState`
+
+Es la interfaz comun del patron. Define las acciones que todos los estados concretos deben implementar:
+
+- `increaseTraffic(TrafficSimulator simulator)`
+- `reduceTraffic(TrafficSimulator simulator)`
+- `reportAccident(TrafficSimulator simulator)`
+- `clearAccident(TrafficSimulator simulator)`
+- `advanceSimulation(TrafficSimulator simulator)`
+
 ### Estados concretos
 - `FluentTrafficState`
 - `CongestedTrafficState`
 - `AccidentTrafficState`
 - `ClearedTrafficState`
 
-Cada una de estas clases implementa `TrafficState` y encapsula su comportamiento específico.
+Cada una de estas clases encapsula el comportamiento especifico de la misma operacion segun la condicion actual del trafico.
 
-## Evidencia del Patrón State
-La evidencia principal del patrón es que las mismas acciones producen respuestas distintas según el estado actual del contexto.
+### Como cambia dinamicamente el comportamiento
+La evidencia central del patron es que el mismo metodo produce resultados distintos segun el objeto State activo.
 
-### `increaseTraffic()`
-- En `FluentTrafficState`, el sistema cambia a `CongestedTrafficState`.
-- En `CongestedTrafficState`, el sistema permanece congestionado.
-- En `AccidentTrafficState`, la congestión empeora alrededor del accidente.
-- En `ClearedTrafficState`, el sistema vuelve a congestionarse.
+#### `increaseTraffic()`
+- En `FluentTrafficState`, el contexto delega la accion y el estado concreto cambia a `CongestedTrafficState`.
+- En `CongestedTrafficState`, la accion se resuelve sin cambio de estado.
+- En `AccidentTrafficState`, la accion no elimina el accidente y el sistema permanece en ese estado.
+- En `ClearedTrafficState`, la recuperacion se interrumpe y el sistema vuelve a congestion.
 
-### `reduceTraffic()`
-- En `FluentTrafficState`, no cambia el estado porque ya existe flujo normal.
-- En `CongestedTrafficState`, el sistema pasa a `ClearedTrafficState`.
-- En `AccidentTrafficState`, reducir tráfico no resuelve el accidente.
-- En `ClearedTrafficState`, ayuda a la recuperación de la vía.
+#### `reduceTraffic()`
+- En `FluentTrafficState`, el sistema permanece estable.
+- En `CongestedTrafficState`, la reduccion de trafico provoca una transicion a `ClearedTrafficState`.
+- En `AccidentTrafficState`, la reduccion no resuelve el accidente.
+- En `ClearedTrafficState`, la accion apoya la recuperacion sin cambiar el estado.
 
-### `reportAccident()`
-- En `FluentTrafficState`, cambia a `AccidentTrafficState`.
-- En `CongestedTrafficState`, también cambia a `AccidentTrafficState`.
-- En `AccidentTrafficState`, informa que el accidente ya está activo.
-- En `ClearedTrafficState`, activa nuevamente un estado de accidente.
+#### `reportAccident()`
+- En `FluentTrafficState`, aparece un accidente y el sistema cambia a `AccidentTrafficState`.
+- En `CongestedTrafficState`, la congestion evoluciona a accidente.
+- En `AccidentTrafficState`, la accion se atiende, pero el estado ya estaba activo.
+- En `ClearedTrafficState`, la recuperacion se interrumpe y reaparece el estado de accidente.
 
-### `clearAccident()`
-- En `FluentTrafficState`, indica que no existe accidente para despejar.
-- En `CongestedTrafficState`, indica que no hay accidente que limpiar.
-- En `AccidentTrafficState`, cambia a `ClearedTrafficState`.
-- En `ClearedTrafficState`, informa que la vía ya está en proceso de recuperación.
+#### `clearAccident()`
+- En `FluentTrafficState`, no existe accidente por despejar.
+- En `CongestedTrafficState`, tampoco hay accidente activo.
+- En `AccidentTrafficState`, la limpieza provoca una transicion a `ClearedTrafficState`.
+- En `ClearedTrafficState`, la accion no cambia el estado porque la via ya se encuentra en recuperacion.
 
-### `advanceSimulation()`
-- En `FluentTrafficState`, los vehículos avanzan rápidamente.
+#### `advanceSimulation()`
+- En `FluentTrafficState`, los vehiculos avanzan rapidamente.
 - En `CongestedTrafficState`, avanzan lentamente.
 - En `AccidentTrafficState`, quedan bloqueados o casi detenidos.
-- En `ClearedTrafficState`, la simulación lleva al sistema nuevamente a `FluentTrafficState`.
+- En `ClearedTrafficState`, la simulacion concluye la recuperacion y el sistema retorna a `FluentTrafficState`.
 
-## Estructura general del proyecto
-- `context`: contiene el contexto del patrón.
+## Separacion de responsabilidades
+- `context`: contiene el Contexto del patron State.
 - `state`: contiene la interfaz State y los estados concretos.
 - `model`: contiene las entidades del dominio.
-- `server`: contiene el servidor HTTP y la vista de consola.
-- `public`: contiene la interfaz web en HTML, CSS y JavaScript.
+- `server`: contiene el adaptador HTTP y la vista de consola.
+- `public`: contiene la interfaz web.
 
-## Cómo ejecutar el proyecto en IntelliJ IDEA
+La arquitectura mantiene estas reglas:
+
+- No hay logica de estado en la interfaz web.
+- No hay logica de estado en el servidor HTTP.
+- Solo los estados concretos deciden como responder a cada accion.
+- `TrafficSimulator` delega, pero no reemplaza el comportamiento de los estados.
+
+## Como ejecutar el proyecto en IntelliJ IDEA
 1. Abrir IntelliJ IDEA.
 2. Seleccionar `Open` y elegir la carpeta del proyecto.
-3. Verificar que IntelliJ reconozca `src/main/java` como carpeta de código fuente.
-4. Asegurarse de tener un JDK configurado.
+3. Confirmar que `src/main/java` este marcado como carpeta de codigo fuente.
+4. Configurar un JDK compatible.
 5. Ejecutar la clase `Main`.
 
-La clase `Main` inicia el servidor HTTP integrado en el puerto `8080`.
+La clase `Main` solo conecta el Contexto `TrafficSimulator` con el servidor HTTP `TrafficHttpServer`.
 
-## Cómo abrir la aplicación web
+## Como abrir la aplicacion web
 1. Ejecutar `Main`.
-2. Esperar el mensaje en consola:
+2. Esperar el mensaje:
 
 ```text
 Server running at http://localhost:8080
 ```
 
-3. Abrir un navegador web.
-4. Ir a:
+3. Abrir el navegador en:
 
 ```text
 http://localhost:8080
 ```
 
-## Qué debe probar el profesor para evidenciar el patrón
-Para verificar correctamente el uso del patrón State, se recomienda probar esta secuencia:
+## Que debe probar el profesor
+Para evidenciar el Patron State de manera directa, el profesor puede seguir esta secuencia:
 
-1. Iniciar la aplicación y observar el estado inicial `FluentTrafficState`.
-2. Presionar `Aumentar tráfico` y verificar el cambio a `CongestedTrafficState`.
-3. Presionar `Reportar accidente` y verificar el cambio a `AccidentTrafficState`.
-4. Presionar `Reducir tráfico` y comprobar que el accidente no se resuelve.
-5. Presionar `Despejar accidente` y verificar el cambio a `ClearedTrafficState`.
-6. Presionar `Avanzar simulación` y comprobar el retorno a `FluentTrafficState`.
+1. Verificar que el estado inicial es `FluentTrafficState`.
+2. Presionar `Aumentar trafico` y observar la transicion a `CongestedTrafficState`.
+3. Presionar `Reportar accidente` y observar la transicion a `AccidentTrafficState`.
+4. Presionar `Despejar accidente` y verificar la transicion a `ClearedTrafficState`.
+5. Presionar `Reducir trafico` y comprobar que el sistema permanece en recuperacion.
+6. Presionar `Avanzar simulacion` y observar el retorno a `FluentTrafficState`.
+7. Presionar `Modo demostracion` para ver una secuencia automatica de delegacion, trazas y transiciones.
 
-Durante esa prueba, el profesor debe observar:
+Durante la evaluacion debe observarse:
 
-- El cambio de clase de estado en pantalla.
-- El cambio de velocidad promedio.
-- El cambio del nivel de congestión.
-- El cambio visual de los vehículos en la carretera.
-- El registro de eventos.
-- Que las transiciones ocurren dentro de las clases de estado y no en el contexto.
+- La clase activa del estado.
+- La ultima accion ejecutada.
+- El resultado de la accion.
+- El historial de transiciones.
+- El registro de eventos academico.
+- La diferencia visual entre trafico fluido, congestionado, accidente y via despejada.
 
-## Observación final
-El proyecto mantiene una separación clara de responsabilidades:
+## Conclusion academica
+El proyecto es defendible porque la evidencia del patron es visible tanto en el codigo como en la interfaz:
 
-- El backend en Java conserva la lógica del dominio y del patrón State.
-- El servidor HTTP solo expone endpoints y archivos estáticos.
-- El frontend representa visualmente la información enviada por el backend.
-- La lógica de transición de estados permanece encapsulada en los estados concretos.
+- El Contexto es explicito.
+- La interfaz State es explicita.
+- Los estados concretos son explicitos.
+- Las transiciones ocurren dentro de los estados concretos.
+- El servidor solo expone endpoints.
+- La interfaz solo representa lo que el backend envia.

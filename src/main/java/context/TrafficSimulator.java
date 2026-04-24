@@ -12,6 +12,7 @@ import java.util.List;
 /**
  * Context of the State design pattern.
  * It stores the active TrafficState and delegates every traffic action to it.
+ * The Context never decides the concrete behavior of traffic actions.
  */
 public class TrafficSimulator {
     private static final int DEFAULT_SPEED = 90;
@@ -62,17 +63,17 @@ public class TrafficSimulator {
         stateTransitions.clear();
         lastActionTrace = "Action: reset handled by TrafficSimulator \u2192 Transition to FluentTrafficState";
         initializeSimulator(false);
-        addLog("Simulator reset to the initial fluent state.");
+        addLog("TrafficSimulator reset the simulation and restored FluentTrafficState as the initial academic baseline.");
     }
 
     public synchronized void runDemoSequence() {
         if (demoRunning) {
-            addLog("Demo sequence is already running.");
+            addLog("TrafficSimulator rejected a new demo request because the previous demonstration sequence is still running.");
             return;
         }
 
         demoRunning = true;
-        addLog("Demo sequence started to demonstrate the State pattern.");
+        addLog("TrafficSimulator started the automatic demonstration sequence to expose dynamic State-pattern behavior.");
 
         Thread demoThread = new Thread(() -> {
             try {
@@ -88,7 +89,7 @@ public class TrafficSimulator {
             } finally {
                 synchronized (TrafficSimulator.this) {
                     demoRunning = false;
-                    addLog("Demo sequence finished.");
+                    addLog("TrafficSimulator finished the automatic demonstration sequence.");
                 }
             }
         }, "traffic-demo-sequence");
@@ -102,7 +103,7 @@ public class TrafficSimulator {
         this.currentState = state;
         logStateTransition(previousStateName, state.getStateName());
         refreshRoadStatus();
-        addLog("State changed to " + state.getStateName() + ".");
+        addLog("TrafficSimulator updated its active state reference to " + state.getStateName() + ".");
     }
 
     public synchronized void updateCars(int speed, boolean blocked) {
@@ -158,6 +159,12 @@ public class TrafficSimulator {
         roadStatus.setLastActionTrace(lastActionTrace);
     }
 
+    public synchronized void recordStateHandling(String actionMethodName, String handlingStateName, String traceOutcome) {
+        String actionTrace = "Action: " + actionMethodName + " handled by " + handlingStateName + " \u2192 " + traceOutcome;
+        setLastActionTrace(actionTrace);
+        addLog(buildAcademicDelegationLog(actionMethodName, handlingStateName, traceOutcome));
+    }
+
     public synchronized void addLog(String message) {
         logs.add(message);
 
@@ -186,7 +193,7 @@ public class TrafficSimulator {
         roadStatus.setLastActionTrace(lastActionTrace);
 
         if (addInitializationLog) {
-            addLog("Simulator initialized in fluent traffic state.");
+            addLog("TrafficSimulator initialized the Context with FluentTrafficState as the starting State object.");
         }
     }
 
@@ -220,5 +227,22 @@ public class TrafficSimulator {
         cars.add(new Car("CAR-002", 2, 20, DEFAULT_SPEED, false));
         cars.add(new Car("CAR-003", 1, 40, DEFAULT_SPEED, false));
         cars.add(new Car("CAR-004", 3, 60, DEFAULT_SPEED, false));
+    }
+
+    private String buildAcademicDelegationLog(String actionMethodName, String handlingStateName, String traceOutcome) {
+        if (traceOutcome.startsWith("Transition to ")) {
+            String targetState = traceOutcome.replace("Transition to ", "");
+            return "TrafficSimulator delegated " + actionMethodName + "() to " + handlingStateName
+                    + ", which transitioned to " + targetState + ".";
+        }
+
+        if (traceOutcome.startsWith("Remains in ")) {
+            String targetState = traceOutcome.replace("Remains in ", "");
+            return "TrafficSimulator delegated " + actionMethodName + "() to " + handlingStateName
+                    + ", which remained in " + targetState + ".";
+        }
+
+        return "TrafficSimulator delegated " + actionMethodName + "() to " + handlingStateName
+                + ", which produced the result: " + traceOutcome + ".";
     }
 }

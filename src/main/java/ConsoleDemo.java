@@ -1,6 +1,9 @@
 import context.TrafficSimulator;
 import server.TrafficConsoleServer;
 
+/**
+ * Optional console-only demonstration of the same Context and State collaboration.
+ */
 public class ConsoleDemo {
     public static void main(String[] args) {
         TrafficSimulator simulator = new TrafficSimulator();

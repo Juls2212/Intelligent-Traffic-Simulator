@@ -416,37 +416,39 @@ function translateCongestionLevel(congestionLevel) {
 }
 
 function translateLog(log) {
-    const translations = {
-        "Simulator initialized in fluent traffic state.": "El simulador se inicializo en estado de trafico fluido.",
-        "Simulator reset to the initial fluent state.": "El simulador se reinicio al estado inicial de trafico fluido.",
-        "Traffic volume increased. The road is now becoming congested.": "El volumen de trafico aumento. La via comienza a congestionarse.",
-        "Traffic reduction requested, but traffic is already fluent.": "Se solicito reducir trafico, pero ya se encuentra en estado fluido.",
-        "An accident was reported. Traffic flow switches to accident mode.": "Se reporto un accidente. El flujo cambia al modo de accidente.",
-        "No active accident exists to clear.": "No existe un accidente activo para despejar.",
-        "Simulation advanced with high-speed traffic flow.": "La simulacion avanzo con flujo de trafico rapido.",
-        "State changed to CongestedTrafficState.": "El estado cambio a CongestedTrafficState.",
-        "Traffic volume increased further, but the system remains congested.": "El volumen de trafico aumento aun mas, pero el sistema sigue congestionado.",
-        "Traffic volume reduced. The road enters a recovery phase.": "El volumen de trafico disminuyo. La via entra en fase de recuperacion.",
-        "An accident occurred during congestion. Traffic switches to accident mode.": "Ocurrio un accidente durante la congestion. El trafico cambia al modo de accidente.",
-        "There is no accident to clear in the congested state.": "No hay accidente que despejar en el estado congestionado.",
-        "Simulation advanced with slow vehicle movement due to congestion.": "La simulacion avanzo con movimiento lento por congestion.",
-        "State changed to AccidentTrafficState.": "El estado cambio a AccidentTrafficState.",
-        "Traffic increased around the accident area, making congestion worse.": "El trafico aumento alrededor del accidente y empeoro la congestion.",
-        "Reducing traffic volume does not solve the active accident.": "Reducir el volumen de trafico no resuelve el accidente activo.",
-        "The accident state is already active.": "El estado de accidente ya esta activo.",
-        "Emergency response cleared the accident. The road moves into recovery.": "La emergencia despejo el accidente. La via entra en recuperacion.",
-        "Simulation advanced with blocked traffic near the accident area.": "La simulacion avanzo con trafico bloqueado cerca del accidente.",
-        "State changed to ClearedTrafficState.": "El estado cambio a ClearedTrafficState.",
-        "Traffic increased during recovery. The road becomes congested again.": "El trafico aumento durante la recuperacion. La via vuelve a congestionarse.",
-        "Traffic reduction supports recovery and improves vehicle movement.": "La reduccion del trafico favorece la recuperacion y mejora el movimiento.",
-        "A new accident was reported during recovery.": "Se reporto un nuevo accidente durante la recuperacion.",
-        "The road is already being cleared and recovered.": "La via ya esta siendo despejada y recuperada.",
-        "Simulation advanced in recovery mode. Traffic returns to fluent conditions.": "La simulacion avanzo en recuperacion. El trafico vuelve a condiciones fluidas.",
-        "State changed to FluentTrafficState.": "El estado cambio a FluentTrafficState.",
-        "Demo sequence started to demonstrate the State pattern.": "Se inicio la secuencia automatica para demostrar el patron State.",
-        "Demo sequence is already running.": "La secuencia automatica ya se encuentra en ejecucion.",
-        "Demo sequence finished.": "La secuencia automatica finalizo."
-    };
+    if (log === "TrafficSimulator initialized the Context with FluentTrafficState as the starting State object.") {
+        return "TrafficSimulator inicializo el Contexto con FluentTrafficState como objeto State inicial.";
+    }
 
-    return translations[log] || log;
+    if (log === "TrafficSimulator reset the simulation and restored FluentTrafficState as the initial academic baseline.") {
+        return "TrafficSimulator reinicio la simulacion y restauro FluentTrafficState como linea base academica inicial.";
+    }
+
+    if (log === "TrafficSimulator started the automatic demonstration sequence to expose dynamic State-pattern behavior.") {
+        return "TrafficSimulator inicio la secuencia automatica para exponer el comportamiento dinamico del patron State.";
+    }
+
+    if (log === "TrafficSimulator rejected a new demo request because the previous demonstration sequence is still running.") {
+        return "TrafficSimulator rechazo una nueva solicitud de demostracion porque la secuencia anterior sigue en ejecucion.";
+    }
+
+    if (log === "TrafficSimulator finished the automatic demonstration sequence.") {
+        return "TrafficSimulator finalizo la secuencia automatica de demostracion.";
+    }
+
+    if (log.startsWith("TrafficSimulator delegated ")) {
+        return log
+            .replace("TrafficSimulator delegated ", "TrafficSimulator delego ")
+            .replace(", which transitioned to ", ", y este realizo una transicion a ")
+            .replace(", which remained in ", ", y este permanecio en ");
+    }
+
+    if (log.startsWith("TrafficSimulator updated its active state reference to ")) {
+        return log.replace(
+            "TrafficSimulator updated its active state reference to ",
+            "TrafficSimulator actualizo su referencia de estado activo a "
+        );
+    }
+
+    return log;
 }
