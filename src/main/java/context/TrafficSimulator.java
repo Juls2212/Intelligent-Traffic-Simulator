@@ -18,6 +18,11 @@ public class TrafficSimulator {
     private static final int DEFAULT_SPEED = 90;
     private static final int MAX_LOG_ENTRIES = 20;
     private static final long DEMO_STEP_DELAY_MS = 1200;
+    private static final double ROAD_LENGTH = 760.0;
+    private static final double MOVEMENT_SCALE = 1.8;
+    private static final double ACCIDENT_POSITION = 540.0;
+    private static final double ACCIDENT_APPROACH_DISTANCE = 120.0;
+    private static final int ACCIDENT_AFTER_ZONE_SPEED = 14;
 
     private TrafficState currentState;
     private final List<Car> cars;
@@ -26,6 +31,7 @@ public class TrafficSimulator {
     private final List<String> stateTransitions;
     private String lastActionTrace;
     private boolean demoRunning;
+    private long lastMovementTimestamp;
 
     public TrafficSimulator() {
         this.cars = new ArrayList<>();
@@ -33,27 +39,33 @@ public class TrafficSimulator {
         this.stateTransitions = new ArrayList<>();
         this.lastActionTrace = "No action has been handled yet.";
         this.demoRunning = false;
+        this.lastMovementTimestamp = System.currentTimeMillis();
         this.roadStatus = new RoadStatus("", "", "", "", lastActionTrace, 0, "", false);
         initializeSimulator(true);
     }
 
     public synchronized void increaseTraffic() {
+        synchronizeTrafficFlow();
         currentState.increaseTraffic(this);
     }
 
     public synchronized void reduceTraffic() {
+        synchronizeTrafficFlow();
         currentState.reduceTraffic(this);
     }
 
     public synchronized void reportAccident() {
+        synchronizeTrafficFlow();
         currentState.reportAccident(this);
     }
 
     public synchronized void clearAccident() {
+        synchronizeTrafficFlow();
         currentState.clearAccident(this);
     }
 
     public synchronized void advanceSimulation() {
+        synchronizeTrafficFlow();
         currentState.advanceSimulation(this);
     }
 
@@ -62,6 +74,7 @@ public class TrafficSimulator {
         logs.clear();
         stateTransitions.clear();
         lastActionTrace = "Action: reset handled by TrafficSimulator \u2192 Transition to FluentTrafficState";
+        lastMovementTimestamp = System.currentTimeMillis();
         initializeSimulator(false);
         addLog("TrafficSimulator reset the simulation and restored FluentTrafficState as the initial academic baseline.");
     }
@@ -107,25 +120,29 @@ public class TrafficSimulator {
     }
 
     public synchronized void updateCars(int speed, boolean blocked) {
+        synchronizeTrafficFlow();
+
         for (Car car : cars) {
             car.setSpeed(speed);
-            car.setBlocked(blocked);
-
-            if (!blocked) {
-                car.setXPosition(car.getXPosition() + speed);
-            }
+            car.setBlocked(false);
         }
 
-        roadStatus.setAverageSpeed(speed);
+        if (blocked) {
+            applyAccidentTrafficToCars(speed);
+        }
+
         roadStatus.setAccidentActive(blocked);
-        roadStatus.setCongestionLevel(resolveCongestionLevel(speed, blocked));
+        refreshAverageSpeedAndCongestionLevel();
+        lastMovementTimestamp = System.currentTimeMillis();
     }
 
     public synchronized List<Car> getCars() {
+        synchronizeTrafficFlow();
         return Collections.unmodifiableList(new ArrayList<>(cars));
     }
 
     public synchronized RoadStatus getRoadStatus() {
+        synchronizeTrafficFlow();
         return new RoadStatus(
                 roadStatus.getStateName(),
                 roadStatus.getSpanishStateName(),
@@ -147,6 +164,7 @@ public class TrafficSimulator {
     }
 
     public synchronized TrafficState getCurrentState() {
+        synchronizeTrafficFlow();
         return currentState;
     }
 
@@ -190,6 +208,7 @@ public class TrafficSimulator {
         currentState = new FluentTrafficState();
         refreshRoadStatus();
         updateCars(DEFAULT_SPEED, false);
+        lastMovementTimestamp = System.currentTimeMillis();
         roadStatus.setLastActionTrace(lastActionTrace);
 
         if (addInitializationLog) {
@@ -224,9 +243,9 @@ public class TrafficSimulator {
 
     private void loadDefaultCars() {
         cars.add(new Car("CAR-001", 1, 0, DEFAULT_SPEED, false));
-        cars.add(new Car("CAR-002", 2, 20, DEFAULT_SPEED, false));
-        cars.add(new Car("CAR-003", 1, 40, DEFAULT_SPEED, false));
-        cars.add(new Car("CAR-004", 3, 60, DEFAULT_SPEED, false));
+        cars.add(new Car("CAR-002", 2, 170, DEFAULT_SPEED, false));
+        cars.add(new Car("CAR-003", 1, 340, DEFAULT_SPEED, false));
+        cars.add(new Car("CAR-004", 3, 510, DEFAULT_SPEED, false));
     }
 
     private String buildAcademicDelegationLog(String actionMethodName, String handlingStateName, String traceOutcome) {
@@ -244,5 +263,66 @@ public class TrafficSimulator {
 
         return "TrafficSimulator delegated " + actionMethodName + "() to " + handlingStateName
                 + ", which produced the result: " + traceOutcome + ".";
+    }
+
+    private void synchronizeTrafficFlow() {
+        long currentTimestamp = System.currentTimeMillis();
+        long elapsedMilliseconds = currentTimestamp - lastMovementTimestamp;
+
+        if (elapsedMilliseconds <= 0) {
+            return;
+        }
+
+        double elapsedSeconds = elapsedMilliseconds / 1000.0;
+
+        for (Car car : cars) {
+            if (car.getSpeed() <= 0 || car.isBlocked()) {
+                continue;
+            }
+
+            double advancedPosition = car.getXPosition() + (car.getSpeed() * elapsedSeconds * MOVEMENT_SCALE);
+            int wrappedPosition = (int) Math.round(advancedPosition % ROAD_LENGTH);
+            car.setXPosition(wrappedPosition);
+        }
+
+        lastMovementTimestamp = currentTimestamp;
+    }
+
+    private void refreshAverageSpeedAndCongestionLevel() {
+        int totalSpeed = 0;
+        boolean anyBlocked = false;
+
+        for (Car car : cars) {
+            totalSpeed += car.getSpeed();
+            anyBlocked = anyBlocked || car.isBlocked();
+        }
+
+        int averageSpeed = cars.isEmpty() ? 0 : totalSpeed / cars.size();
+        roadStatus.setAverageSpeed(averageSpeed);
+        roadStatus.setCongestionLevel(resolveCongestionLevel(averageSpeed, anyBlocked));
+    }
+
+    private boolean isCarInAccidentQueue(Car car) {
+        double position = car.getXPosition();
+        return position >= (ACCIDENT_POSITION - ACCIDENT_APPROACH_DISTANCE) && position <= ACCIDENT_POSITION;
+    }
+
+    private void applyAccidentTrafficToCars(int speed) {
+        for (Car car : cars) {
+            if (isCarInAccidentQueue(car)) {
+                car.setSpeed(0);
+                car.setBlocked(true);
+                continue;
+            }
+
+            if (car.getXPosition() > ACCIDENT_POSITION) {
+                car.setSpeed(Math.max(speed + 6, ACCIDENT_AFTER_ZONE_SPEED));
+                car.setBlocked(false);
+                continue;
+            }
+
+            car.setSpeed(Math.max(speed, 4));
+            car.setBlocked(false);
+        }
     }
 }

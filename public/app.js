@@ -1,6 +1,8 @@
-const DEFAULT_POLL_INTERVAL_MS = 2500;
+const DEFAULT_POLL_INTERVAL_MS = 800;
 const DEMO_POLL_INTERVAL_MS = 1000;
 const POSITION_SCALE = 1.6;
+const ROAD_LENGTH = 760;
+const CAR_START_OFFSET = 42;
 
 const roadSceneElement = document.getElementById("road-scene");
 const carsLayerElement = document.getElementById("cars-layer");
@@ -36,6 +38,8 @@ let delegationTimerId = null;
 let transitionHighlightTimerId = null;
 let demoMessageTimerId = null;
 let currentPollIntervalMs = DEFAULT_POLL_INTERVAL_MS;
+const carElementsById = new Map();
+const previousCarPositions = new Map();
 
 document.addEventListener("DOMContentLoaded", () => {
     bindActions();
@@ -98,7 +102,7 @@ function renderStatus(status) {
     const actionTraceParts = parseActionTrace(status.lastActionTrace);
 
     roadSceneElement.className = `road-scene ${visualState}`;
-    accidentMarkerElement.hidden = !status.accidentActive;
+    accidentMarkerElement.hidden = status.accidentActive !== true;
     recoveryBannerElement.hidden = status.currentState !== "ClearedTrafficState";
 
     applyStateTheme(stateHeroCardElement, `hero-side-card ${themeClass}`);
@@ -142,28 +146,58 @@ function startPolling(intervalMs) {
 }
 
 function renderCars(cars, currentState) {
-    carsLayerElement.innerHTML = "";
     const sceneWidth = carsLayerElement.clientWidth || roadSceneElement.clientWidth || 900;
-    const maxPosition = Math.max(...cars.map((car) => car.xPosition), 1);
-    const usableWidth = Math.max(sceneWidth - 120, 220);
+    const usableWidth = Math.max(sceneWidth - 120, 240);
+    const currentCarIds = new Set(cars.map((car) => car.id));
 
     cars.forEach((car, index) => {
-        const carElement = document.createElement("div");
-        const relativePosition = maxPosition === 0 ? 0 : car.xPosition / maxPosition;
-        const scaledPosition = Math.min(car.xPosition * POSITION_SCALE, usableWidth);
-        const normalizedPosition = Math.max(scaledPosition, relativePosition * usableWidth);
+        const normalizedPosition = (car.xPosition % ROAD_LENGTH) / ROAD_LENGTH;
+        const leftPosition = Math.min((normalizedPosition * usableWidth) + CAR_START_OFFSET, sceneWidth - 30);
         const laneTop = resolveLaneTop(car.lane);
+        const previousPosition = previousCarPositions.get(car.id);
+        let carElement = carElementsById.get(car.id);
+
+        if (!carElement) {
+            carElement = document.createElement("div");
+            carElement.innerHTML = `
+                <span class="car-label">${car.id}</span>
+                <span class="car-top"></span>
+                <span class="car-light"></span>
+            `;
+            carElementsById.set(car.id, carElement);
+            carsLayerElement.appendChild(carElement);
+        }
 
         carElement.className = buildCarClassName(car, currentState, index);
-        carElement.style.left = `${Math.min(normalizedPosition + 60, sceneWidth - 30)}px`;
+        carElement.querySelector(".car-label").textContent = car.id;
         carElement.style.top = `${laneTop}px`;
-        carElement.innerHTML = `
-            <span class="car-label">${car.id}</span>
-            <span class="car-top"></span>
-            <span class="car-light"></span>
-        `;
 
-        carsLayerElement.appendChild(carElement);
+        if (previousPosition !== undefined && leftPosition < previousPosition - 120) {
+            carElement.style.transition = "none";
+            carElement.style.left = `${CAR_START_OFFSET - 46}px`;
+
+            requestAnimationFrame(() => {
+                carElement.style.transition = "";
+                carElement.style.left = `${leftPosition}px`;
+            });
+        } else {
+            carElement.style.left = `${leftPosition}px`;
+        }
+
+        previousCarPositions.set(car.id, leftPosition);
+    });
+
+    Array.from(carElementsById.keys()).forEach((carId) => {
+        if (!currentCarIds.has(carId)) {
+            const carElement = carElementsById.get(carId);
+
+            if (carElement) {
+                carElement.remove();
+            }
+
+            carElementsById.delete(carId);
+            previousCarPositions.delete(carId);
+        }
     });
 }
 

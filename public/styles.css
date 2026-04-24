@@ -458,7 +458,8 @@ h2 {
 
 .recovery-banner {
     padding: 10px 14px;
-    border-radius: 999px;
+    max-width: 320px;
+    border-radius: 18px;
     background: rgba(46, 166, 115, 0.14);
     color: var(--cleared);
     font-weight: 700;
